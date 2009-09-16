@@ -1,0 +1,53 @@
+defaults: &defaults
+  # default plan (name) when user has no subscription. Defaults to the first plan with rate==0. Must be a plan with rate==0 since no billing occurs. 
+  default_plan: free
+  
+  # what plan (name) to assign to subscriptions that have expired (may be nil) (defaults to default_plan). Must be a plan with rate==0 since no billing occurs. 
+  expired_plan: free
+
+  # trial period length (days) before first billing (can be 0 for no trial) (default = 30)
+  trial_period: 30
+  
+  # grace period length (days) after subscription is past due before it is expired (closed down)
+  grace_period: 7
+  
+  # define the mailer class name to use (default SubscriptionMailer provided with plugin)
+  mailer_class: SubscriptionMailer
+      
+  # where to send admin reports (nil for no emails)
+  admin_report_recipients: jonathan@parkerhill.com
+  
+  # shortcut configuration of the ActiveMerchant gateway
+  #  test sets the Billing mode
+  test: true
+  
+  #  gateway is the name of the gateway, passed to ActiveMerchant::Billing::Base.gateway(name)
+  gateway_name: braintree
+  
+  # login credentials to the gateway
+  login: testapi
+  password: password1
+  
+  # other options passed to #new when initializing the gateway
+  # gateway_options: 
+  #   foo: bar
+  #   baz: bam
+  
+  # when true then card is validated by authorizing for $1 (and then void) [always false for bogus gateway]
+  validate_via_transaction: true
+  
+development:
+  <<: *defaults
+  gateway_name: bogus
+
+test:
+  <<: *defaults
+  gateway_name: bogus
+  
+cucumber:
+  <<: *defaults
+  gateway_name: bogus
+    
+production:
+  <<: *defaults  
+  test: false

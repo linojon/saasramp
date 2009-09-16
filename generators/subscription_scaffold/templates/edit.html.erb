@@ -1,0 +1,14 @@
+<h1>Change Subscription Plan</h1>
+<p>
+	<strong>Current Plan:</strong>
+	<%= @subscription.plan.name.titleize %>
+</p>
+<% form_for @subscription do |f| %>
+	<p>
+		<%= f.label :change_plan, "Change plan to" %><br />
+		<%= f.select :change_plan, @allowed_plans.collect {|p| [ p.name, p.id ] } %>
+	</p>
+	<p><%= f.submit "Submit" %></p>
+<% end %>
+
+<p><%= link_to "Cancel Subscription", subscription_path(:current) %>

@@ -1,0 +1,13 @@
+<%#= render :partial => "/shared/email_header", :locals => {:user => @user} %>
+
+This email is to let you know we charged your credit card.
+
+  Your Plan: <%= @subscription.plan.name %> (<%= @subscription.plan.rate %> per <%= @subscription.plan.interval==1 ? "month" : pluralize( @subscription.plan.interval, "month") %>)
+  Paid: <%= @transaction.amount.format %>
+  Paid Through: <%= @subscription.next_renewal_on %>
+  Card number: <%= @subscription.profile.card_display_number %>
+  Date: <%= @transaction.created_at.to_date %>
+
+Thank you!
+
+<%#= render :partial => "/shared/email_footer" %>

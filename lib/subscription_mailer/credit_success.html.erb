@@ -1,0 +1,11 @@
+<%#= render :partial => "/shared/email_header", :locals => {:user => @user} %>
+
+This email is to let you know we have credited your credit card.
+
+  Card number: <%= @subscription.profile.card_display_number %>
+  Refund: <%= @transaction.amount.format %>
+  Date: <%= @transaction.created_at.to_date %>
+
+Thank you!
+
+<%#= render :partial => "/shared/email_footer" %>

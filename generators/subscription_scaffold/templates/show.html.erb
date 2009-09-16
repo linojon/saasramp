@@ -1,0 +1,58 @@
+<h1>Subscription Details</h1>
+<fieldset>
+	<legend>Subscription</legend>
+	<p>
+		<strong>Plan:</strong>
+		<%= @subscription.plan.name.titleize %>
+		<%= button_to "Change Plan", edit_subscription_path(:current), :method => :get %>
+	</p>
+	<% unless @user.subscription.free? %>
+		<p>
+			<strong>Status:</strong>
+			<%= @user.subscription.state.titleize %>
+			<% if @user.subscription.past_due? %>
+				<span style="color:red">Account is past due. Please update your credit card information now.</span>
+			<% end %>			
+		</p>
+		<p>
+			<% if @subscription.trial? %>
+				<strong>Trial Period Ends:</strong>
+			<% else %>
+				<strong>Paid Through:</strong>
+			<% end %>
+			<%= @subscription.next_renewal_on %>
+		</p>
+		<% unless @subscription.balance.zero? %>
+			<p>
+				<strong>Balance on Account:</strong>
+				<%= @subscription.balance.format %>
+			</p>
+		<% end %>
+	<% end %>
+</fieldset>
+<fieldset>
+	<legend>Billing Info</legend>
+	<p>
+		<strong>Credit Card:</strong>
+	  <% if @subscription.profile.nil? || @subscription.profile.no_info? %>
+			(no credit card on file)
+		<% else %>
+			<%= "#{@subscription.profile.card_type.titleize} #{@subscription.profile.card_display_number} Expires: #{@subscription.profile.card_expires_on}" %>
+			<% if @subscription.profile.error? %>
+				<span style="color:red">There was an error processing your credit card.</span>
+			<% end %>
+		<% end %>
+		<%= button_to "Update Credit Card", credit_card_subscription_path(:current), :method => :get %>
+	</p>
+	<% if t = @subscription.latest_transaction %>
+	<p>
+		<strong>Latest Transaction:</strong>
+			<%# make this a helper %>
+			<%= t.created_at %> :
+			<%= 'FAILED TO' unless t.success? %>
+			<%= t.action.capitalize %> card.
+			<%= "for #{t.amount.format}" unless t.amount.nil? %>
+			<%= t.message %>
+		<%= "(#{link_to 'history', history_subscription_path(:current)})" %>
+	</p>
+<% end %>

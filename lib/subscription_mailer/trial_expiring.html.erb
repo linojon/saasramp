@@ -1,0 +1,17 @@
+<%#= render :partial => "/shared/email_header", :locals => {:user => @user} %>
+
+Just to let you know, your trial is expiring soon. We hope you are pleased with our service.
+
+<% if @subscription.profile.authorized? %>
+If you want to continue the service, you don't need to do anything, 
+you'll be automatically billed.
+
+If, however, you want to discontinue the service, please cancel it before that time. 
+Otherwise you'll be charged and begin your paid subscription.
+<% else %>
+We do not presently have an authorized credit card on file. Please log in and update your credit card information.
+
+If, however, you want to discontinue the service, please log in and cancel your subscription to avoid further email warnings.
+<% end %>
+
+<%#= render :partial => "/shared/email_footer" %>

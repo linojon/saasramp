@@ -1,0 +1,7 @@
+<h1>Transaction History</h1>
+<ul>
+	<% @transactions.each do |tx| %>
+	  <li> <%= tx.created_at %> : <%= tx.action.titleize %> <%= tx.amount %> <%= tx.message unless tx.success? %></li>
+	<% end %>
+</ul>
+<%= link_to "Back", subscription_path(:current) %>

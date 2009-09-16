@@ -1,0 +1,33 @@
+defaults: &defaults
+  # Note, this is seed data, changes here are not used at runtime, 
+  # must run "rake subscription:plans" to load them into the database. 
+  # But you can change this and re-run the rake task to update the database.
+  # If you've added any app-specific limits to plans you can add them here
+  #   name: name of the plan (required)
+  #   rate_cents: cost of the plan in cents (0 or nil is free)
+  #   interval: rate is for number of months (default 1). For example, an annual fee @ $25/month would have rate_cents: 25000 and interval: 12
+  #   other attributes: are app-specific, be sure you've added them to the SubscriptionPlan migration 
+  plans:
+    - name: free
+      rate_cents: 0
+    
+    - name: basic
+      rate_cents: 1000
+      #foo: bar
+    
+    - name: pro
+      rate_cents: 30000
+      interval: 12
+      #foo: baz
+    
+development:
+  <<: *defaults
+
+test:
+  <<: *defaults
+
+cucumber:
+  <<: *defaults
+  
+production:
+  <<: *defaults

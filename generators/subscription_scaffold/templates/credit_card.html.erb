@@ -1,0 +1,33 @@
+<h1>Credit Card</h1>
+
+<% form_for :profile, :url => {:action => :store_credit_card} do |form| %>
+	<%= form.error_messages %>
+	<% form.fields_for :credit_card, @profile.credit_card do |f| %>
+  <p>
+    <%= f.label :first_name %><br />
+    <%= f.text_field :first_name %>
+  </p>
+  <p>
+    <%= f.label :last_name %><br />
+    <%= f.text_field :last_name %>
+  </p>
+  <p>
+    <%= f.label :type, 'Card type' %><br />
+    <%= f.select :type, SubscriptionConfig.gateway.supported_cardtypes.collect {|c| [c.to_s.titleize, c.to_s]} %>
+  </p>
+  <p>
+    <%= f.label :number, 'Card number' %><br />
+    <%= f.text_field :number %>
+  </p>
+  <p>
+    <%= f.label :verification_value, 'Card Verification Value (CVV)' %><br />
+    <%= f.text_field :verification_value, :size => 4 %>
+  </p>
+  <p>
+    <%= f.label :month, 'Card expires on:' %><br />
+		month: <%= f.select :month,  1.upto(12).to_a.map  { |i| "%02d" % i } %>
+		year: <%= f.select :year, Date.today.year.upto(Date.today.year+10).to_a %>
+  </p>
+	<% end %>
+  <p><%= form.submit "Submit", :disable_with => "One moment please..." %></p>
+<% end %>
