@@ -1,4 +1,6 @@
-class SaasrampGenerator < Rails::Generator::NamedBase
+# this generator bootstraps a Rails project for use with SaasRamp
+require File.expand_path(File.dirname(__FILE__) + "/lib/insert_commands.rb")
+class SaasrampGenerator < Rails::Generator::Base
   def manifest
     record do |m|
       m.directory 'config'

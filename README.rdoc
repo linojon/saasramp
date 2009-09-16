@@ -7,68 +7,68 @@ SaasRamp is an open source Rails plugin which enables subscription billings in y
 == Key Features
 
 * Built as a wrapper to ActiveMerchant
-- Uses the AM gateways
-- Uses the AM credit card validation
+	- Uses the AM gateways
+	- Uses the AM credit card validation
 
 * Recurring billing and other daily tasks and notifications run on your server
-- Does not use recurring billing at the gateway (for more control and less synchronization)
-- Run a rake billing task as a daily cron job
-- Billing task can be run any time, skip a day, or multiple times a day without fear of screwing up or sending duplicate messages
+	- Does not use recurring billing at the gateway (for more control and less synchronization)
+	- Run a rake billing task as a daily cron job
+	- Billing task can be run any time, skip a day, or multiple times a day without fear of screwing up or sending duplicate messages
 
 * Decouples subscriptions from authentication and authorization 
-- You can use Restful Authentication, Authlogic or anything else
-- Declare your model (e.g. User or Account) with acts_as_subscriber
+	- You can use Restful Authentication, Authlogic or anything else
+	- Declare your model (e.g. User or Account) with acts_as_subscriber
 
 * Separates the subscription, customer profile (credit card), and transaction history
-- Separate models for clean separation of resources. 
+	- Separate models for clean separation of resources. 
 
 * Subscription model
-- When a model acts_as_subscriber it has one subscription
-- Subscription states - :free, :trial, :active, :past_due, :expired
-- renew method processes recurring billing
-- change_plan method for changing plans and billing or crediting the difference
-- useful daily processing methods or you can roll your own
+	- When a model acts_as_subscriber it has one subscription
+	- Subscription states - :free, :trial, :active, :past_due, :expired
+	- renew method processes recurring billing
+	- change_plan method for changing plans and billing or crediting the difference
+	- useful daily processing methods or you can roll your own
 
 * Subscription plan model
-- subscription belongs to plan
-- Define plans with different name, rate, interval
-- Migrate your own attributes to define limitations (e.g. max_memory, etc) 
-- Plans defined in db/subscription_plans.yml file, loaded with rake subscription:plans task
+	- subscription belongs to plan
+	- Define plans with different name, rate, interval
+	- Migrate your own attributes to define limitations (e.g. max_memory, etc) 
+	- Plans defined in db/subscription_plans.yml file, loaded with rake subscription:plans task
 
 * Subscription profile model
-- subscription has one profile
-- Responsible for handling the credit card information
-- including validation, storing, and unstoring the customer profile and card on the gateway
-- Profile states - :no_info, :authorized, :error
+	- subscription has one profile
+	- Responsible for handling the credit card information
+	- including validation, storing, and unstoring the customer profile and card on the gateway
+	- Profile states - :no_info, :authorized, :error
 
 * Subscription transaction model
-- subscription has many transactions
-- Provides a transaction history
-- Wraps ActiveMerchant, unifying inconsistent gateway api
-- Handles exceptions and logging
+	- subscription has many transactions
+	- Provides a transaction history
+	- Wraps ActiveMerchant, unifying inconsistent gateway api
+	- Handles exceptions and logging
 
 * Subscription observer and mailer
-- observes transactions to send out email notifications as needed
-- puts email delivery in one file and un-clutters the models
-- includes mailer templates you can use or change
+	- observes transactions to send out email notifications as needed
+	- puts email delivery in one file and un-clutters the models
+	- includes mailer templates you can use or change
 
 * Example workflow:
-- New subscriptions can default to a free plan
-- New (non free) subscriptions start in :trial state (optional)
-- A warning email is sent out a few days before trial expires (trial period configurable)
-- When the trial period is over, the subscription becomes :active
-- When renewals are due, :active subscriptions are billed and next renewal date is updated
-- If there's a billing error, subscription becomes :past_due
-- Past due subscriptions have a grace period (optional) and warnings are sent before subscription is :expired
-- Expired subscriptions can revert to a limited plan rather than shut down
+	- New subscriptions can default to a free plan
+	- New (non free) subscriptions start in :trial state (optional)
+	- A warning email is sent out a few days before trial expires (trial period configurable)
+	- When the trial period is over, the subscription becomes :active
+	- When renewals are due, :active subscriptions are billed and next renewal date is updated
+	- If there's a billing error, subscription becomes :past_due
+	- Past due subscriptions have a grace period (optional) and warnings are sent before subscription is :expired
+	- Expired subscriptions can revert to a limited plan rather than shut down
 
 * Easy configuration and customization
-- Configuration via a config/subscription.yml file (can vary per environment)
-- Populate and maintain current plans via a db/subscription_plans.yml file (can vary per environment)
-- Initializer generator for the default migration and configuration files
-- Scaffold generator for example controllers and views
-- Rake task for daily processing, you create a cron job
-- Gateway monkeypatches in config/initializers/gateways/
+	- Configuration via a config/subscription.yml file (can vary per environment)
+	- Populate and maintain current plans via a db/subscription_plans.yml file (can vary per environment)
+	- Initializer generator for the default migration and configuration files
+	- Scaffold generator for example controllers and views
+	- Rake task for daily processing, you create a cron job
+	- Gateway monkeypatches in config/initializers/gateways/
 
 === Dependencies
 
@@ -141,6 +141,50 @@ In your subscriber model you can declare a callback, subscription_plan_check, th
     exceeded[:file_count]  = plan.max_files  if file_count > plan.max_files
     exceeded
   end
+
+=== Setup recurring billing
+
+Review the rake task (tasks/saasramp_tasks.rake) and make sure the business logic meets your requirements. The task can be run any time from the command line,
+
+	$ subscription:daily RAILS_ENV=production
+	
+You can re-run the task multiple times a day without fear of accidental duplicate billings or notification emails.
+
+Remember that email notifications are sent not by the rake task but through the SubscriptionObserver whenever a SubscriptionTransaction is created. You can modify that behavior by editing the subscription_observer.rb file, or simply not enabling the observer in your environment.rb.
+
+To setup recurring billing on your server, use a cron tab manager to run the task, for example,
+
+	"cd ~/myapp && rake subscription:daily RAILS_ENV=production"
+
+To setup from the command line, to run, for example, every day at 3am, put the following text in a file (eg daily.txt)
+
+	0  3  *  *  *  cd ~/myapp && rake subscription:daily RAILS_ENV=production
+
+and type
+	$ crontab daily.txt
+	
+=== Test the plugin
+
+Uses RSpec, which requires a dummy app to run the specs.
+
+	$ rails saastest
+	$ cd saastest
+	
+	edit environment.rb
+		config.gem 'activemerchant', :lib => 'active_merchant'
+		config.gem "money"
+	  config.gem 'state_machine'
+		
+	edit enviroments/test.rb
+		config.gem "rspec", :lib => false, :version => ">= 1.2.0"
+	  config.gem "rspec-rails", :lib => false, :version => ">= 1.2.0"  
+  
+  $ script/generate spec
+	$ script/generate saasramp
+	
+	$ cd vendor/plugins/saasramp/
+	$ rake spec
+	$ rake remote_spec
 
 
 === Inspired by

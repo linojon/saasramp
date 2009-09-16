@@ -70,12 +70,11 @@ describe AuthorizeNetCimGateway do
       @trans_id = response.token #params['direct_response']['transaction_id']      
         
       response = @gateway.void( @amount, @trans_id )
-      #pp response
+      pp response unless response.success?
       response.should be_success
     end
 
     it "refunds a charge" do
-      #debugger
       @amount = 5000 # change amount to avoid "duplicate transaction" error
       response = @gateway.purchase( @amount, @key  )
       pp response unless response.success?
@@ -85,12 +84,15 @@ describe AuthorizeNetCimGateway do
       # according to AN support, thats about every 10 minute in the test environment
       # in production "they would only settle once a day after the merchant defined Transaction Cut Off Time."
       seconds = 600
-      puts "sleeping #{seconds}..."
-      sleep seconds
-      puts 'awake'
-      response = @gateway.refund( @trans_id, :amount => @amount, :billing_id => @key )
-      pp response unless response.success?
-      response.should be_success
+      puts "sleeping #{seconds} (press enter to interrupt)"
+      if select([STDIN],[],[],seconds)
+        puts 'skipped'
+      else
+        puts 'awake'
+        response = @gateway.refund( @trans_id, :amount => @amount, :billing_id => @key )
+        pp response unless response.success?
+        response.should be_success
+      end
     end
     
   end

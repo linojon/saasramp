@@ -1,3 +1,4 @@
+require File.expand_path(File.dirname(__FILE__) + "/lib/insert_commands.rb")
 class SubscriptionScaffoldGenerator < Rails::Generator::NamedBase
 
   def manifest

@@ -1,8 +1,11 @@
 require File.dirname(__FILE__) + '/../spec_helper'
-
+unless ActiveRecord::Base.observers.include? :subscription_observer
+  puts "Cannot run specs on SubscriptionObserver. Please add the following to environment.rb"
+  puts "  config.active_record.observers = :subscription_observer"
+else
 describe SubscriptionObserver do
   before :all do
-    ActiveRecord::Observer.allow_peeping_toms = true
+    ActiveRecord::Observer.allow_peeping_toms = true if ActiveRecord::Observer.respond_to?(:allow_peeping_toms)
   end
   before :each do
     @subscriber = create_subscriber( :subscription_plan => @plan )
@@ -10,7 +13,7 @@ describe SubscriptionObserver do
     mailer_setup
   end
   after :all do
-    ActiveRecord::Observer.allow_peeping_toms = false
+    ActiveRecord::Observer.allow_peeping_toms = false if ActiveRecord::Observer.respond_to?(:allow_peeping_toms)
   end
   
   describe "charge transaction" do
@@ -63,4 +66,5 @@ describe SubscriptionObserver do
       last_email_sent.subject.should =~ /Credit/
     end
   end
+end
 end

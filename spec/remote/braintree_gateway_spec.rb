@@ -56,18 +56,23 @@ describe BraintreeGateway do
       response.should be_success
     end
   
-    it "credit back an amount" do
-      response = @gateway.credit( @amount, @key)
-      response.should be_success
+    if @gateway.respond_to?(:credit)
+      it "credit back an amount" do
+        response = @gateway.credit( @amount, @key)
+        response.should be_success
+      end
     end
     
-    it "refund an amount against a prior purchase" do
-      response = @gateway.purchase( @amount, @key )
-      response.should be_success
-      @trans_id = response.authorization
+    # Note, these require using ActiveMerchant HEAD (as of 9/16/2009) and not 1.4.2
+    if @gateway.respond_to?(:refund)
+      it "refund an amount against a prior purchase" do
+        response = @gateway.purchase( @amount, @key )
+        response.should be_success
+        @trans_id = response.authorization
 
-      response = @gateway.refund( @trans_id, :amount => @amount )
-      response.should be_success
+        response = @gateway.refund( @trans_id, :amount => @amount )
+        response.should be_success
+      end
     end
     
   end

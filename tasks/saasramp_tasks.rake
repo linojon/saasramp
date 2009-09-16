@@ -1,4 +1,4 @@
-namespace :subscription do
+namespace :saas do
   
   desc "Seeds or updates the subscription_plans table data from db/subscription_plans.yml. Note, if plan name exists it will be updated with any new values. For production db run with RAILS_ENV=production"
   task :plans => :environment do

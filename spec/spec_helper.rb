@@ -8,9 +8,17 @@ end
 plugin_spec_dir = File.dirname(__FILE__)
 ActiveRecord::Base.logger = Logger.new(plugin_spec_dir + "/debug.log")
 
-# reference AM classes with fewer keystrokes
-include ActiveMerchant::Billing
+# load the schema
+databases = YAML::load(IO.read(plugin_spec_dir + "/db/database.yml"))
+ActiveRecord::Base.establish_connection(databases[ENV["DB"] || "sqlite3"])
+$stdout = File.open('/dev/null', 'w')
+load(File.join(plugin_spec_dir, "db", "schema.rb"))
+$stdout = STDOUT
 
+# load the ActiveRecord models
+require File.dirname(__FILE__) + '/db/models'
+
+# --------------------------------------
 # simple factories
 def create_subscription_plans
   @free  = SubscriptionPlan.create( :name => 'free',  :rate_cents => 0 )

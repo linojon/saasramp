@@ -1,5 +1,8 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 
+# reference AM classes with fewer keystrokes
+include ActiveMerchant::Billing
+
 # Bogus gateway cc numbers
 #  1 - successful
 #  2 - failed
