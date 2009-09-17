@@ -9,6 +9,9 @@ class SaasrampGenerator < Rails::Generator::Base
       m.directory 'db'
       m.file      'subscription_plans.yml',               'db/subscription_plans.yml'
       
+      m.directory 'config/initializers'
+      m.file      'subscription.rb',                      'config/initializers/subscription.rb'
+
       m.directory 'config/initializers/active_merchant'
       m.file      'active_merchant/bogus.rb',             'config/initializers/active_merchant/bogus.rb'
       m.file      'active_merchant/braintree.rb',         'config/initializers/active_merchant/braintree.rb'

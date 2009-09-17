@@ -46,7 +46,7 @@ ActiveRecord::Schema.define(:version => 1) do
     t.datetime "updated_at"
   end
 
-  create_table "users", :force => true do |t|
+  create_table "fake_users", :force => true do |t|
     t.string   "username"
     t.string   "email"
   end

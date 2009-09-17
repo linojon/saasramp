@@ -1,5 +1,4 @@
 class SubscriptionConfig  
-  # returns true or name of file it tried to load if fails
   def self.load
     config_file = File.join(Rails.root, "config", "subscription.yml")
 
@@ -11,9 +10,6 @@ class SubscriptionConfig
         cattr_accessor key
         send("#{key}=", config[key])
       end
-      true
-    else
-      config_file
     end
   end
   
@@ -29,3 +25,6 @@ class SubscriptionConfig
   end
   
 end
+
+# load configuration settings
+SubscriptionConfig.load

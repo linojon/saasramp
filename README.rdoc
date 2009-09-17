@@ -72,6 +72,8 @@ Testing requires gems
 
 == Installation
 
+  $ script/plugin install git://github.com/linoj/saasramp.git
+
 Easy configuration and customization
 - Configuration via a config/subscription.yml file (can vary per environment)
 - Populate and maintain current plans via a db/subscription_plans.yml file (can vary per environment)
@@ -89,9 +91,13 @@ Easy configuration and customization
 	$ ./script/generate saasramp
   
 === Generate migrations
-	$ ./script/generate subscription_migration
+	$ ./script/generate saas_migration
 (Review the file, adjust as needed, including custom attributes if any)
 	$ rake db:migrate
+	
+=== Acts as subscriber
+To the model that will own the subscription (e.g. User or Account), add
+  acts_as_subscriber
 
 === Define and populate the subscription plans
 - Edit the file db/subscription_plans.yml
@@ -192,11 +198,13 @@ Uses RSpec, which requires a dummy app to run the specs.
 		config.gem "money"
 		config.gem 'state_machine'
 		
-	edit enviroments/test.rb
+	edit environments/test.rb
 		config.gem "rspec", :lib => false, :version => ">= 1.2.0"
 		config.gem "rspec-rails", :lib => false, :version => ">= 1.2.0"  
   
 	$ script/generate spec
+	
+	$ script/install plugin git:...
 	$ script/generate saasramp
 	
 	$ cd vendor/plugins/saasramp/

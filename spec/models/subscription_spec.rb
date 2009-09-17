@@ -22,7 +22,7 @@ describe Subscription do
     before :each do
       SubscriptionConfig.trial_period = 30
       @plan = SubscriptionPlan.create( :name => 'basic', :rate_cents => 1000)
-      @subscription = Subscription.create( :subscriber_id => 1, :subscriber_type => 'User', :plan => @plan )
+      @subscription = Subscription.create( :subscriber_id => 1, :subscriber_type => 'FakeUser', :plan => @plan )
     end
     
     it "is in trial" do
@@ -38,7 +38,7 @@ describe Subscription do
     before :each do
       SubscriptionConfig.trial_period = 0
       @plan = SubscriptionPlan.create( :name => 'basic', :rate_cents => 1000, :interval => 3)
-      @subscription = Subscription.create( :subscriber_id => 1, :subscriber_type => 'User', :plan => @plan )
+      @subscription = Subscription.create( :subscriber_id => 1, :subscriber_type => 'FakeUser', :plan => @plan )
     end
     
     it "is active" do
@@ -133,7 +133,7 @@ describe Subscription do
     end
     
     it "credit unused value back to credit card" do
-      SubscriptionTransaction.should_receive(:credit).with(200, anything).and_return( SubscriptionTransaction.new(:success => true) )
+      SubscriptionTransaction.should_receive(:credit).with(200, anything, :subscription => @subscription).and_return( SubscriptionTransaction.new(:success => true) )
       @subscription.cancel      
     end
     
@@ -421,7 +421,7 @@ describe Subscription do
     end
     
     it "credits credit card" do
-      SubscriptionTransaction.should_receive(:credit).with(1500, anything).and_return( SubscriptionTransaction.new(:success => true ))
+      SubscriptionTransaction.should_receive(:credit).with(1500, anything, :subscription => @subscription).and_return( SubscriptionTransaction.new(:success => true ))
       @subscription.credit_balance
     end
     

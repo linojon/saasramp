@@ -171,7 +171,7 @@ class Subscription < ActiveRecord::Base
     transaction do # makes this atomic
       #debugger
       # credit the card
-      tx  = SubscriptionTransaction.credit( -balance_cents, profile.profile_key )
+      tx  = SubscriptionTransaction.credit( -balance_cents, profile.profile_key, :subscription => self )
       # save the transaction
       transactions.push( tx )
       # set profile state and reset balance

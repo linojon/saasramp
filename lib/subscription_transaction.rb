@@ -7,6 +7,12 @@ class SubscriptionTransaction < ActiveRecord::Base
   composed_of :amount, :class_name => 'Money', :mapping => [ %w(amount_cents cents) ], :allow_nil => true
   attr_accessor :token
   
+  # find recent 'charge' transactions that are greater or equal to amount
+  named_scope :charges_at_least, lambda {|amount|
+    { :conditions => ["action = ? AND amount_cents >= ?", 'charge', amount.cents],
+      :order => "created_at DESC" }
+  }
+  
   class << self
     # note, according to peepcode pdf, many gateways require a unique order_id on each transaction
     
@@ -80,10 +86,11 @@ class SubscriptionTransaction < ActiveRecord::Base
     # credit will charge back to the credit card
     # some gateways support doing arbitrary credits, others require a transaction id, 
     # we encapsulate this difference here, looking for a recent successful charge if necessary
+    # Note, refund expects the subscription object to be passed in options so it can find a recent charge
 
     # Note, when using refund (vs credit), the gateway needs time to process the purchase before we can refund against it
-    # for example according to Authorize.net support, thats about every 10 minute in the test environment
-    # in production "they would only settle once a day after the merchant defined Transaction Cut Off Time."
+    # for example according to Authorize.net support, thats about every 10 minute in their test environment
+    # in production they "only settle once a day after the merchant defined Transaction Cut Off Time."
     # so if the credit fails (and transaction was "refund") the app should tell the user to try again in a day (?!)
     
     def credit( amount, profile_key, options = {})
@@ -94,20 +101,18 @@ class SubscriptionTransaction < ActiveRecord::Base
           gw.credit( amount, profile_key, options )
         end
       else
-        # need to refund against a previous charge
-        tx = subscription.transactions.recent_charge( amount )
+        # need to refund against a previous charge (by this subscriber!)
+        subscription = options[:subscription]
+        tx = subscription.transactions.charges_at_least( amount ).first
         if tx
           process( 'refund', amount ) do |gw|
-            # syntax follows void
+            # note, syntax follows void 
             gw.refund( tx.reference, options.merge(:amount => amount) )
           end
         end
       end
     end
 
-    # not used at the moment:
-    # authorize, capture, void
-    
     private
     
     def process( action, amount = nil)

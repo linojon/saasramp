@@ -40,7 +40,6 @@ module Saasramp           #:nodoc:
   		  # return a blank value if ok (nil, false, [], {}), anything else means subscriber has exceeded limits
   		  # maybe should make this a callback option to acts_as_subscriber
   		  def subscription_plan_check(plan)
-  		    "foobar"
   		    # example:
           # exceeded = {}
           # exceeded[:memory_used] = plan.max_memory if subscriber.memory_used > plan.max_memory

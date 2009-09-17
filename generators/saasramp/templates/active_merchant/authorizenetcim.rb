@@ -4,6 +4,7 @@
 #   http://gist.github.com/147194
 #  https://jadedpixel.lighthouseapp.com/projects/11599/tickets/111-void-refund-and-auth_capture-for-authorizenets-cim-gateway#ticket-111-1
 
+include ActiveMerchant::Billing
 require 'digest/sha1'
 
 class AuthorizeNetCimResponse < ActiveMerchant::Billing::Response

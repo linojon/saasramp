@@ -4,6 +4,10 @@ rescue LoadError
   puts "You need to install rspec in your base app"
   exit
 end
+# use rspec mocks
+Spec::Runner.configure do |config|
+  config.mock_with nil
+end
 
 plugin_spec_dir = File.dirname(__FILE__)
 ActiveRecord::Base.logger = Logger.new(plugin_spec_dir + "/debug.log")
@@ -29,7 +33,7 @@ end
 def create_subscription( options = {})
   params = {
     :subscriber_id    => 1,
-    :subscriber_type  => 'User'
+    :subscriber_type  => 'FakeUser'
   }.merge( options )
   Subscription.create( params )
 end
@@ -42,7 +46,7 @@ def create_subscriber( options = {})
     :subscription_plan => @basic
   }.merge( options )
   params[:email] ||= params[:username] + '@example.com'
-  user = User.create( params )
+  user = FakeUser.create( params )
 end
 
 BOGUS_CC_OK = '1'
