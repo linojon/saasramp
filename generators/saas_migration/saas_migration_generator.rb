@@ -1,4 +1,4 @@
-class SubscriptionMigrationGenerator < Rails::Generator::NamedBase
+class SaasMigrationGenerator < Rails::Generator::NamedBase
   def initialize(runtime_args, runtime_options = {})
     runtime_args.insert(0, 'migrations')
     super

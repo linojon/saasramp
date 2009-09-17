@@ -1,4 +1,4 @@
-== SaasRamp
+= SaasRamp
 
 [notice: not yet used in production]
 
@@ -6,71 +6,60 @@ SaasRamp is an open source Rails plugin which enables subscription billings in y
 
 == Key Features
 
-* Built as a wrapper to ActiveMerchant
-	- Uses the AM gateways
-	- Uses the AM credit card validation
+Built as a wrapper to ActiveMerchant
+- Uses the AM gateways
+- Uses the AM credit card validation
 
-* Recurring billing and other daily tasks and notifications run on your server
-	- Does not use recurring billing at the gateway (for more control and less synchronization)
-	- Run a rake billing task as a daily cron job
-	- Billing task can be run any time, skip a day, or multiple times a day without fear of screwing up or sending duplicate messages
+Recurring billing and other daily tasks and notifications run on your server
+- Does not use recurring billing at the gateway (for more control)
+- Run "rake saas:billing" (e.g. as a daily cron job)
+- Billing task can be run any time, skip a day, or multiple times a day without fear of sending duplicate billings or messages
 
-* Decouples subscriptions from authentication and authorization 
-	- You can use Restful Authentication, Authlogic or anything else
-	- Declare your model (e.g. User or Account) with acts_as_subscriber
+Decouples subscriptions from authentication and authorization 
+- You can use Restful Authentication, Authlogic or anything else
+- Declare your model (e.g. User or Account) with "acts_as_subscriber"
 
-* Separates the subscription, customer profile (credit card), and transaction history
-	- Separate models for clean separation of resources. 
+Separates the subscription, customer profile (credit card), and transaction history
 
-* Subscription model
-	- When a model acts_as_subscriber it has one subscription
-	- Subscription states - :free, :trial, :active, :past_due, :expired
-	- renew method processes recurring billing
-	- change_plan method for changing plans and billing or crediting the difference
-	- useful daily processing methods or you can roll your own
+Subscription model
+- When a model "acts_as_subscriber" it has one subscription
+- Subscription states - :free, :trial, :active, :past_due, :expired
+- #renew method processes recurring billing
+- #change_plan method for changing plans and billing or crediting the difference
 
-* Subscription plan model
-	- subscription belongs to plan
-	- Define plans with different name, rate, interval
-	- Migrate your own attributes to define limitations (e.g. max_memory, etc) 
-	- Plans defined in db/subscription_plans.yml file, loaded with rake subscription:plans task
+Subscription plan model
+- Define plans with different name, rate, interval
+- Migrate your own attributes (e.g. to define limitations, like max_memory, etc) 
+- Plans defined in db/subscription_plans.yml file, loaded with "rake saas:plans" task
 
-* Subscription profile model
-	- subscription has one profile
-	- Responsible for handling the credit card information
-	- including validation, storing, and unstoring the customer profile and card on the gateway
-	- Profile states - :no_info, :authorized, :error
+Subscription profile model
+- subscription has one profile
+- Responsible for handling the credit card information
+- Automatic validation, storing, and unstoring in vault on the gateway
+- Profile states - :no_info, :authorized, :error
 
-* Subscription transaction model
-	- subscription has many transactions
-	- Provides a transaction history
-	- Wraps ActiveMerchant, unifying inconsistent gateway api
-	- Handles exceptions and logging
+Subscription transaction model
+- subscription has many transactions
+- Provides a transaction history
+- Wraps ActiveMerchant, unifying inconsistent gateway api
+- Handles exceptions and gateway responses
 
-* Subscription observer and mailer
-	- observes transactions to send out email notifications as needed
-	- puts email delivery in one file and un-clutters the models
-	- includes mailer templates you can use or change
+Subscription observer and mailer
+- observe transactions to send out email notifications as needed
+- email delivery issued from one file, un-clutters the models
+- includes mailer templates you can use or change
 
-* Example workflow:
-	- New subscriptions can default to a free plan
-	- New (non free) subscriptions start in :trial state (optional)
-	- A warning email is sent out a few days before trial expires (trial period configurable)
-	- When the trial period is over, the subscription becomes :active
-	- When renewals are due, :active subscriptions are billed and next renewal date is updated
-	- If there's a billing error, subscription becomes :past_due
-	- Past due subscriptions have a grace period (optional) and warnings are sent before subscription is :expired
-	- Expired subscriptions can revert to a limited plan rather than shut down
+== Example workflow
+- New subscriptions can default to a free plan
+- New (non free) subscriptions start in :trial state (optional)
+- A warning email is sent out a few days before trial expires (trial period configurable)
+- When the trial period is over, and billing is successful, the subscription becomes :active
+- When renewals are due, :active subscriptions are billed and next renewal date is updated
+- If there's a billing error, subscription becomes :past_due
+- Past due subscriptions have a grace period (optional) and warnings are sent before subscription becomes :expired
+- Expired subscriptions can revert to a limited plan rather than shut down the account
 
-* Easy configuration and customization
-	- Configuration via a config/subscription.yml file (can vary per environment)
-	- Populate and maintain current plans via a db/subscription_plans.yml file (can vary per environment)
-	- Initializer generator for the default migration and configuration files
-	- Scaffold generator for example controllers and views
-	- Rake task for daily processing, you create a cron job
-	- Gateway monkeypatches in config/initializers/gateways/
-
-=== Dependencies
+== Dependencies
 
 Requires the following gems
 - ActiveMerchant - for gateways and credit card validation
@@ -80,54 +69,83 @@ Requires the following gems
 Testing requires gems
 - rspec, rspec-on-rails
 
-=== Installation
+== Installation
 
-Add to environment.rb
+Easy configuration and customization
+- Configuration via a config/subscription.yml file (can vary per environment)
+- Populate and maintain current plans via a db/subscription_plans.yml file (can vary per environment)
+- Initializer generator for the default migration and configuration files
+- Scaffold generator for example controllers and views
+- Rake task for daily processing, you create a cron job
+- Gateway monkeypatches in config/initializers/gateways/
+
+=== Add to environment.rb
 	config.gem 'activemerchant', :lib => 'active_merchant'
 	config.gem "money"
-  config.gem 'state_machine'
+	config.gem 'state_machine'
 
-Generate initialize
+=== Generate initialize
 	$ ./script/generate saasramp
   
-Generate migrations
-	$ ./script/generate subscription_migrate
-	(Review the file, adjust as needed, including custom attributes if any)
+=== Generate migrations
+	$ ./script/generate subscription_migration
+(Review the file, adjust as needed, including custom attributes if any)
 	$ rake db:migrate
 
-Define and populate the subscription plans
-	Edit the file db/subscription_plans.yml
-	Load into database
-	$ rake subscription:plans
+=== Define and populate the subscription plans
+- Edit the file db/subscription_plans.yml
+- Load into database
+	$ rake saas:plans
 	
-Edit the configuration file config/subscription.yml
-	- gateway name and login parameters
-	- default settings
-	- environment specific settings
-	- custom attributes (if any)
+=== Edit the configuration file config/subscription.yml
+- gateway name and login parameters
+- default settings
+- environment specific settings
+- custom attributes (if any)
 
-Optionally, generate scaffolds (controllers and views)
+=== Optionally, generate scaffolds (controllers and views)
 	$ ./script/generate subscription_scaffold
 
-Optionally, add email notification observers, in environment.rb
+=== Optionally, add email notification observers, in environment.rb
 	config.active_record.observers = :subscription_observer
 	
-Optionally, create your own mailer, using the SubscriptionMailer and templates as an example
-	and modify subscription.yml with your mailer class name
+=== Optionally, create your own mailer, using the SubscriptionMailer and templates as an example
+and modify subscription.yml with your mailer class name
 
-=== Gateways
+== Gateways
 
 Extensions/fixes to the ActiveMerchant gateways are in config/initializers/active_merchant/
 
 I've only tested wrappers for the Authorize.Net CIM and Braintree gateways. 
 The AN-CIM one is temporary until ActiveMerchant integrates CIM into the regular AuthorizeNet gateway.
 
-If you plan to use a different gateway, look at SubscriptionTransaction to see what API we use,
-and look at the spec/remote/ specs for more details.
+The gateway is expected to support the following API:
 
-=== Plan limits checker
+	Credit card based authorized/void, if you enable credit card validation at the gateway
+		authorize( amount, credit_card )      # => response.authorization is the reference id
+		void( reference )
+		
+	Credit card storage and unstore
+		store( credit_card )                  # => response.token is the vault profile_key
+		unstore( profile_key )
+		update( profile_key, credit_card )    # optional, if not we will unstore/store
 
-In your subscriber model you can declare a callback, subscription_plan_check, that checks whether a subscriber has exceeded limits for his plan. This is used by Subscription#allowed_plans. The method is expected to return a blank value if ok (nil, false, [], {}), anything else means subscriber has exceeded limits. For example,
+	Purchase based on customer profile key (vault key) (we'll use either of the following methods)
+		purchase( amount, profile_key )       # => response.authorization is the reference id
+	or:
+		authorize( amount, profile_key )      # => response.authorization is the reference id
+		capture( amount, reference )
+		
+	Credit/refund (we'll use either of the following methods)
+		credit( amount, profile_key )
+	or:
+		refund( reference, :amount => amount )
+	
+See subscription_transaction.rb and spec/remote/*_spec.rb for more details.
+
+== Plan limits checker
+
+In your subscriber model you can declare a callback, #subscription_plan_check, that checks whether a subscriber has exceeded limits for his plan. This is used by Subscription#allowed_plans. The method is expected to return a blank value if ok (nil, false, [], {}), anything else means subscriber has exceeded limits. For example,
 
 	def subscription_plan_check(plan)
 		(memory_used > plan.max_memory) ||
@@ -135,18 +153,18 @@ In your subscriber model you can declare a callback, subscription_plan_check, th
 	end
 	
 	# Or,
-  def subscription_plan_check(plan)
-    exceeded = {}
-    exceeded[:memory_used] = plan.max_memory if memory_used > plan.max_memory
-    exceeded[:file_count]  = plan.max_files  if file_count > plan.max_files
-    exceeded
-  end
+	def subscription_plan_check(plan)
+		exceeded = {}
+		exceeded[:memory_used] = plan.max_memory if memory_used > plan.max_memory
+		exceeded[:file_count]  = plan.max_files  if file_count > plan.max_files
+		exceeded
+	end
 
-=== Setup recurring billing
+== Setup recurring billing
 
 Review the rake task (tasks/saasramp_tasks.rake) and make sure the business logic meets your requirements. The task can be run any time from the command line,
 
-	$ subscription:daily RAILS_ENV=production
+	$ rake saas:daily RAILS_ENV=production
 	
 You can re-run the task multiple times a day without fear of accidental duplicate billings or notification emails.
 
@@ -154,16 +172,14 @@ Remember that email notifications are sent not by the rake task but through the 
 
 To setup recurring billing on your server, use a cron tab manager to run the task, for example,
 
-	"cd ~/myapp && rake subscription:daily RAILS_ENV=production"
+	"cd ~/myapp && rake saas:daily RAILS_ENV=production"
 
-To setup from the command line, to run, for example, every day at 3am, put the following text in a file (eg daily.txt)
+To setup from the command line to run every day at 3am, for example:
 
-	0  3  *  *  *  cd ~/myapp && rake subscription:daily RAILS_ENV=production
-
-and type
+	$ echo "0  3  *  *  *  cd ~/myapp && rake saas:daily RAILS_ENV=production" > daily.txt
 	$ crontab daily.txt
 	
-=== Test the plugin
+== Test the plugin
 
 Uses RSpec, which requires a dummy app to run the specs.
 
@@ -173,13 +189,13 @@ Uses RSpec, which requires a dummy app to run the specs.
 	edit environment.rb
 		config.gem 'activemerchant', :lib => 'active_merchant'
 		config.gem "money"
-	  config.gem 'state_machine'
+		config.gem 'state_machine'
 		
 	edit enviroments/test.rb
 		config.gem "rspec", :lib => false, :version => ">= 1.2.0"
-	  config.gem "rspec-rails", :lib => false, :version => ">= 1.2.0"  
+		config.gem "rspec-rails", :lib => false, :version => ">= 1.2.0"  
   
-  $ script/generate spec
+	$ script/generate spec
 	$ script/generate saasramp
 	
 	$ cd vendor/plugins/saasramp/
@@ -187,7 +203,7 @@ Uses RSpec, which requires a dummy app to run the specs.
 	$ rake remote_spec
 
 
-=== Inspired by
+== Inspired by
 (and snippets of code borrowed from)
 
 * Peepcode ActiveMerchant pdf tutorial by Cody Fauser

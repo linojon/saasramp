@@ -1,8 +1,12 @@
 Description:
-    Explain the generator
+    This generator bootstraps a Rails project for use with SaasRamp
 
 Example:
-    ./script/generate saasramp Thing
+    ./script/generate saasramp
 
-    This will create:
-        what/will/it/create
+This will create:
+    config/subscription.yml										editable configuration file
+	  config/initializers/subscription.rb				initializer
+	  db/subscription_plans.yml
+	  config/initializers/active_merchant/
+	      
