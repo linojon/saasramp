@@ -2,16 +2,17 @@
 
 [notice: not yet used in production]
 
-SaasRamp is an open source Rails plugin which enables subscription billings in your application. I decided to take a somewhat different approach than others I have seen. It is built as a wrapper on ActiveMerchant, handles its own daily processing, and is completely independent of the authorization and authentication you choose.
+SaasRamp is an open source Rails plugin which enables subscription billings in your application. I decided to take a somewhat different approach than others I have seen. It is built as a wrapper on ActiveMerchant, stores credit cards in the gateway, handles its own daily processing, and is completely independent of the authorization and authentication you choose.
 
 == Key Features
 
 Built as a wrapper to ActiveMerchant
 - Uses the AM gateways
 - Uses the AM credit card validation
+- Requires gateways that support store/unstore credit cards, and transactions using the vault key
 
 Recurring billing and other daily tasks and notifications run on your server
-- Does not use recurring billing at the gateway (for more control)
+- Does not use recurring billing at the gateway (for more control and to avoid synchronization problems)
 - Run "rake saas:billing" (e.g. as a daily cron job)
 - Billing task can be run any time, skip a day, or multiple times a day without fear of sending duplicate billings or messages
 
