@@ -12,7 +12,7 @@ class SaasScaffoldGenerator < Rails::Generator::Base
       m.file        'history.html.erb',             'app/views/subscriptions/history.html.erb'
       m.file        'show.html.erb',                'app/views/subscriptions/show.html.erb'
 
-      m.route_resource_x :subscriptions, :member => { :credit_card => :get, :store_credit_card => :post, :history => :get, :cancel => :get }
+      m.route_resources_x :subscriptions, :member => { :credit_card => :get, :store_credit_card => :post, :history => :get, :cancel => :get }
     end
   end
 end

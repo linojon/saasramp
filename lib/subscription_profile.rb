@@ -7,6 +7,8 @@ class SubscriptionProfile < ActiveRecord::Base
   before_save         :store_card
   before_destroy      :unstore_card
   
+  attr_accessible # none
+  
   # ------------
   state_machine :state, :initial => :no_info do
     event :authorized do 

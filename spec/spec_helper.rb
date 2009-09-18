@@ -35,7 +35,10 @@ def create_subscription( options = {})
     :subscriber_id    => 1,
     :subscriber_type  => 'FakeUser'
   }.merge( options )
-  Subscription.create( params )
+  s = Subscription.new
+  params.each {|k,v| s.send("#{k}=",v) }
+  s.save
+  s
 end
 
 def create_subscriber( options = {})

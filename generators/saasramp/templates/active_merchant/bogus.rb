@@ -4,7 +4,7 @@ include ActiveMerchant::Billing
 class ActiveMerchant::Billing::Response
 #class BogusResponse < ActiveMerchant::Billing::Response
   def token
-    @params[:billingid]
+    @params.stringify_keys['billingid']
   end
 end
 

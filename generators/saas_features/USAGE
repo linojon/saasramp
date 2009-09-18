@@ -1,0 +1,41 @@
+Description:
+    This generator add Cucumber features to your application
+
+Example:
+    ./script/generate saas_features
+
+This will create:
+
+
+You will also have to manually do:
+    add to features/support/env.rb
+        # global subscription plans fixtures
+        # see http://wiki.github.com/aslakhellesoy/cucumber/fixtures
+        # and http://wiki.github.com/aslakhellesoy/cucumber/hooks
+        raw = File.read( RAILS_ROOT + '/db/subscription_plans.yml' )
+        data = YAML.load(raw)[RAILS_ENV].symbolize_keys
+        data[:plans].each {|params| SubscriptionPlan.create( params ) }
+        at_exit do
+          SubscriptionPlan.destroy_all
+        end
+        
+        
+    add to features/support/path.rb
+        when /my profile/
+          user_path(:current)
+        when /my subscription/
+          subscription_path(:current)
+        when /my credit card/
+          credit_card_subscription_path(:current)
+        
+    also, check the user_steps.rb file, it may define steps and methods you already have, it contains
+        Given /^a user "(.*)"$/
+        Given /^a user is logged in as "(.*)"$/
+        When /^I log in as "(.*)"$/
+        def create_user( options = {} )
+        def log_in_as( username )
+        
+    finally, the scenarios expect the homepage has a link to "Sign up" page
+        
+        
+        

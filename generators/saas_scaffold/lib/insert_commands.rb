@@ -1,14 +1,14 @@
 # adapted from Ryan Bates nifty generators
 
 Rails::Generator::Commands::Create.class_eval do
-  def route_resource_x(resource, options)
+  def route_resources_x(resource, options)
     resource_list = [resource.to_sym.inspect, options.inspect].join(', ')
     sentinel = 'ActionController::Routing::Routes.draw do |map|'
     
-    logger.route "map.resource #{resource_list}"
+    logger.route "map.resources #{resource_list}"
     unless options[:pretend]
       gsub_file 'config/routes.rb', /(#{Regexp.escape(sentinel)})/mi do |match|
-        "#{match}\n  map.resource #{resource_list}\n"
+        "#{match}\n  map.resources #{resource_list}\n"
       end
     end
   end
@@ -25,10 +25,10 @@ Rails::Generator::Commands::Create.class_eval do
 end
 
 Rails::Generator::Commands::Destroy.class_eval do
-  def route_resource_x(resource, options)
+  def route_resources_x(resource, options)
     resource_list = [resource.to_sym.inspect, options.inspect].join(', ')
-    look_for = "\n  map.resource #{resource_list}\n"
-    logger.route "map.resource #{resource_list}"
+    look_for = "\n  map.resources #{resource_list}\n"
+    logger.route "map.resources #{resource_list}"
     unless options[:pretend]
       gsub_file 'config/routes.rb', /(#{look_for})/mi, ''
     end
@@ -43,9 +43,9 @@ Rails::Generator::Commands::Destroy.class_eval do
 end
 
 Rails::Generator::Commands::List.class_eval do
-  def route_resource_x(resource, options)
+  def route_resources_x(resource, options)
     resource_list = [resource.to_sym.inspect, options.inspect].join(', ')
-    logger.route "map.resource #{resource_list}"
+    logger.route "map.resources #{resource_list}"
   end
 
   def insert_into(file, line)

@@ -3,14 +3,15 @@
 	<legend>Subscription</legend>
 	<p>
 		<strong>Plan:</strong>
-		<%= @subscription.plan.name.titleize %>
+		<% plan = @subscription.plan %>
+		<%= plan.name.titleize %> <%= "(#{plan.rate.format} per #{ plan.interval==1 ? 'month' : pluralize(plan.interval, 'month')})" unless plan.free? %>
 		<%= button_to "Change Plan", edit_subscription_path(:current), :method => :get %>
 	</p>
-	<% unless @user.subscription.free? %>
+	<% unless @subscription.free? %>
 		<p>
 			<strong>Status:</strong>
-			<%= @user.subscription.state.titleize %>
-			<% if @user.subscription.past_due? %>
+			<%= @subscription.state.titleize %>
+			<% if @subscription.past_due? %>
 				<span style="color:red">Account is past due. Please update your credit card information now.</span>
 			<% end %>			
 		</p>
@@ -22,12 +23,12 @@
 			<% end %>
 			<%= @subscription.next_renewal_on %>
 		</p>
-		<% unless @subscription.balance.zero? %>
-			<p>
-				<strong>Balance on Account:</strong>
-				<%= @subscription.balance.format %>
-			</p>
-		<% end %>
+	<% end %>
+	<% unless @subscription.balance.zero? %>
+		<p>
+			<strong>Balance on Account:</strong>
+			<%= @subscription.balance.format %>
+		</p>
 	<% end %>
 </fieldset>
 <fieldset>

@@ -5,10 +5,10 @@
 </p>
 <% form_for @subscription do |f| %>
 	<p>
-		<%= f.label :change_plan, "Change plan to" %><br />
-		<%= f.select :change_plan, @allowed_plans.collect {|p| [ p.name, p.id ] } %>
+		<%= f.label :plan %><br />
+		<%= f.select :plan, @allowed_plans.collect {|p| [ p.name, p.id ] } %>
 	</p>
-	<p><%= f.submit "Submit" %></p>
+	<p><%= f.submit "Change Plan" %></p>
 <% end %>
 
-<p><%= link_to "Cancel Subscription", subscription_path(:current) %>
+<p style="font:small"><%= link_to "I want to cancel my subscription", cancel_subscription_path(:current) , :confirm => 'Are you sure?' %></p>

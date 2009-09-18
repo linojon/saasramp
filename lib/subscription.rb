@@ -11,6 +11,8 @@ class Subscription < ActiveRecord::Base
   # if you destroy a subscription all transaction history is lost so you may not really want to do that
   before_destroy    :cancel
   
+  attr_accessible # none
+  
   # ------------
   # states: :pending, :free, :trial, :active, :past_due, :expired
   state_machine :state, :initial => :pending do 
@@ -27,7 +29,7 @@ class Subscription < ActiveRecord::Base
       transition any => :free
     end
     event :trial do
-      transition :pending => :trial
+      transition [:pending, :free] => :trial
     end
     event :active do
       transition any => :active
@@ -56,50 +58,62 @@ class Subscription < ActiveRecord::Base
     self.next_renewal_on = start + plan.interval.months
   end
   
-  # (I'd like to implement renew as a state event but I dont see how to set state :past_due on errors)
-  # returns nil if not past due, true for success, false for failed
+  # returns nil if not past due, false for failed, true for success, or amount charged for success when card was charged
   def renew
     # make sure it's time
-    return unless due?
+    return nil unless due?
     transaction do # makes this atomic
       #debugger
       # adjust current balance (except for re-tries)
       self.balance += plan.rate unless past_due?
+      
       # charge the amount due
-      success  = charge_balance
-      # change the state (and saves)
-      success ? active : past_due
-      return success
+      case charge = charge_balance
+        
+      # transaction failed: past due and return false
+      when false:   past_due && false
+        
+      # not charged, subtracted from current balance: update renewal and return true
+      when nil:     active && true
+        
+      # card was charged: update renewal and return amount
+      else          active && charge
+      end
     end
   end
   
   # cancelling can mean revert to a free plan and credit back their card
   # if it also means destroying or disabling the user account, that happens elsewhere in your app 
+  # returns same results as change_plan (nil, false, true)
   def cancel
     change_plan SubscriptionPlan.default_plan
-    credit_balance
+    # uncomment if you want to refund unused value to their credit card, otherwise it just says on balance here
+    #credit_balance
   end
    
   # ------------
   # changing the subscription plan
   # usage: e.g in a SubscriptionsController
-  #  @subscription.change_plan = plan unless @subscription.exceeds_plan?( plan )  
+  #  @subscription.change_plan(plan) unless @subscription.exceeds_plan?( plan )  
   
-  # the #change_plan= method sets the new current plan, prorates unused service from previous billing, and
-  # charges the credit card immediately if subscription is presently active
+  # the #change_plan method sets the new current plan, prorates unused service from previous billing
   # billing cycle for the new plan starts today; prorates unused service from previous billing
   # if was in trial, stays in trial until the trial period runs out
+  # note, you should call #renew right after this
+  
+  # returns nil if no change, false if failed, or true on success
   
   def change_plan( new_plan )
-    #debugger
     # not change?
     return if plan == new_plan
     
-    # prorate unused paid value on current plan
+    # return unused prepaid value on current plan
     self.balance -= plan.prorated_value( days_remaining ) if active?
-    # or prorate unused (although unpaid) value on current plan [comment out if you want to be more forgiving]
+    # or they owe the used (although unpaid) value on current plan [comment out if you want to be more forgiving]
     self.balance -= plan.rate - plan.prorated_value( past_due_days ) if past_due?
     
+    # prorate days since creation if was free (is this what we want?)
+    trial_ends = created_at.to_date + SubscriptionConfig.trial_period.days if plan.nil? || plan.free?
     # prorate unused trial days if in trial
     trial_ends = next_renewal_on if trial?
      
@@ -109,17 +123,21 @@ class Subscription < ActiveRecord::Base
     # update the state and initialize the renewal date
     if plan.free?
       self.free
+      
     elsif trial_ends #aka in trial
       self.trial
       self.next_renewal_on = trial_ends
-    else
+    
+    else #active or past due
+      # note, past due grace period resets like active ones due today, ok?
       self.active
       self.next_renewal_on = Time.zone.today
       self.warning_level = nil
     end
+    # past_due and expired fall through till next renew
     
-    # save changes so far, and restart billing cycle (unless in trial or free)
-    save && renew
+    # save changes so far
+    save
   end
   
   # list of plans this subscriber is allowed to choose
@@ -140,10 +158,13 @@ class Subscription < ActiveRecord::Base
   
   # -------------
   # charge the current balance against the subscribers credit card  
+  # return amount charged on success, false for failure, nil for nothing happened
   def charge_balance
     #debugger
     # nothing to charge? (0 or a credit)
-    return true if balance_cents <= 0
+    return if balance_cents <= 0
+    # no cc on fle
+    return false if profile.no_info? || profile.profile_key.nil?
 
     transaction do # makes this atomic
       #debugger
@@ -158,15 +179,18 @@ class Subscription < ActiveRecord::Base
       else
         profile.error
       end
-      tx.success
+      tx.success && tx.amount
     end
   end
 
   # credit a negative balance to the subscribers credit card
+  # returns amount credited on success, false for failure, nil for nothing 
   def credit_balance
     #debugger
     # nothing to credit?
-    return true if balance_cents >= 0
+    return if balance_cents >= 0
+    # no cc on fle
+    return false if profile.no_info? || profile.profile_key.nil?
 
     transaction do # makes this atomic
       #debugger
@@ -181,7 +205,7 @@ class Subscription < ActiveRecord::Base
       else
         profile.error
       end
-      tx.success
+      tx.success && tx.amount
     end
   end
    

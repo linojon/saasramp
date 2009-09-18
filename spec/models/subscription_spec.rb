@@ -22,7 +22,7 @@ describe Subscription do
     before :each do
       SubscriptionConfig.trial_period = 30
       @plan = SubscriptionPlan.create( :name => 'basic', :rate_cents => 1000)
-      @subscription = Subscription.create( :subscriber_id => 1, :subscriber_type => 'FakeUser', :plan => @plan )
+      @subscription = create_subscription( :plan => @plan )
     end
     
     it "is in trial" do
@@ -38,7 +38,7 @@ describe Subscription do
     before :each do
       SubscriptionConfig.trial_period = 0
       @plan = SubscriptionPlan.create( :name => 'basic', :rate_cents => 1000, :interval => 3)
-      @subscription = Subscription.create( :subscriber_id => 1, :subscriber_type => 'FakeUser', :plan => @plan )
+      @subscription = create_subscription( :plan => @plan )
     end
     
     it "is active" do
@@ -56,7 +56,8 @@ describe Subscription do
       SubscriptionTransaction.stub!(:charge).and_return(SubscriptionTransaction.new(:success => true))
       @plan = SubscriptionPlan.create( :name => 'basic', :rate_cents => 1000, :interval => 1)      
       @subscription = create_subscription( :plan => @plan )
-      #@subscription.next_renewal_on.should == (Time.now.midnight + 1.month).to_date
+      @subscription.profile.state = 'authorized'
+      @subscription.profile.profile_key = '1'
       @today = Time.zone.today
       @subscription.next_renewal_on = @today
       @subscription.state = 'active'
@@ -132,10 +133,10 @@ describe Subscription do
       @subscription.plan.should == SubscriptionPlan.default_plan    
     end
     
-    it "credit unused value back to credit card" do
-      SubscriptionTransaction.should_receive(:credit).with(200, anything, :subscription => @subscription).and_return( SubscriptionTransaction.new(:success => true) )
-      @subscription.cancel      
-    end
+    # it "credit unused value back to credit card" do
+    #   SubscriptionTransaction.should_receive(:credit).with(200, anything, :subscription => @subscription).and_return( SubscriptionTransaction.new(:success => true) )
+    #   @subscription.cancel      
+    # end
     
     it "sets state to free" do
       @subscription.cancel
@@ -254,33 +255,17 @@ describe Subscription do
         @subscription.change_plan( @new_plan )
         @subscription.plan.should == @new_plan
       end
-      it "charges only incremental higher cost" do
-        SubscriptionTransaction.should_receive(:charge).with(Money.new(1800),anything).and_return( SubscriptionTransaction.new(:success => true) )        
-        @subscription.change_plan( @new_plan )
-        @subscription.reload
-        @subscription.balance_cents.should == 0
-      end
       it "deducts unused value" do
-        @new_plan.rate_cents = 700
-        SubscriptionTransaction.should_receive(:charge).with(Money.new(500),anything).and_return( SubscriptionTransaction.new(:success => true) )       
         @subscription.change_plan( @new_plan )
-        @subscription.reload
-        @subscription.balance_cents.should == 0
-      end
-      it "leaves a balance when new plan is less than unused value" do
-        @new_plan.rate_cents = 75
-        SubscriptionTransaction.should_receive(:charge).never     
-        @subscription.change_plan( @new_plan )
-        @subscription.reload
-        @subscription.balance_cents.should == -125
+        @subscription.balance_cents.should == -200
       end
       it "still is active" do
         @subscription.change_plan( @new_plan )
         @subscription.should be_active
       end
-      it "sets renewal date from today" do
+      it "sets renewal date to today" do
         @subscription.change_plan( @new_plan )
-        @subscription.next_renewal_on.should == @today + 1.month
+        @subscription.next_renewal_on.should == @today
       end
     end
     
@@ -311,49 +296,23 @@ describe Subscription do
         @subscription.next_renewal_on = @today - 6.days
         @subscription.state = 'past_due'
         @subscription.balance = @plan.rate # 1000, remaining value = 800
+
+        @subscription.change_plan( @new_plan )
       end
-      
-      describe "and credit card now goes through" do
-        it "sets new plan" do
-          @subscription.change_plan( @new_plan )
-          @subscription.plan.should == @new_plan
-        end
-        it "deducts unused (although unpaid) value" do
-          SubscriptionTransaction.should_receive(:charge).with(Money.new(2200),anything).and_return( SubscriptionTransaction.new(:success => true) )       
-          @subscription.change_plan( @new_plan )
-          @subscription.balance_cents.should == 0
-        end
-        it "is now active" do
-          @subscription.change_plan( @new_plan )
-          @subscription.should be_active
-        end
-        it "sets next renewal from today" do
-          @subscription.change_plan( @new_plan )
-          @subscription.next_renewal_on.should == @today + 1.month
-        end
+      it "sets new plan" do
+        @subscription.plan.should == @new_plan
       end
-    
-      describe "and credit card still fails" do
-        before :each do
-          SubscriptionTransaction.stub!(:charge).and_return(SubscriptionTransaction.new(:success => false))
-          @subscription.warning_level = 2
-          @subscription.change_plan( @new_plan )
-        end       
-        it "sets new plan" do
-          @subscription.plan.should == @new_plan
-        end
-        it "deducts unused (although unpaid) value" do
-          @subscription.balance_cents.should == 2200
-        end
-        it "is still past due" do
-          @subscription.should be_past_due
-        end
-        it "sets renewal day to today" do
-          @subscription.next_renewal_on.should == @today
-        end
-        it "resets warning level" do
-          @subscription.warning_level.should be_nil
-        end
+      it "deducts unused (although unpaid) value" do
+        @subscription.balance_cents.should == 200
+      end
+      it "is active (let renew handle it)" do
+        @subscription.should be_active
+      end
+      it "sets renewal day to today" do
+        @subscription.next_renewal_on.should == @today
+      end
+      it "resets warning level" do
+        @subscription.warning_level.should be_nil
       end
     end
     
@@ -365,8 +324,22 @@ describe Subscription do
     before :each do
       @user = create_subscriber
       @subscription = @user.subscription
+      @subscription.profile.state = 'authorized'
+      @subscription.profile.profile_key = '1'
       @subscription.update_attribute :balance_cents, 1500
-      SubscriptionTransaction.stub!(:charge).and_return( SubscriptionTransaction.new(:success => true ))
+      SubscriptionTransaction.stub!(:charge).and_return( SubscriptionTransaction.new(:success => true, :amount => Money.new(1500) ))
+    end
+    
+    it "returns nil if zero balance" do
+      @subscription.update_attribute :balance_cents, 0
+      @subscription.charge_balance.should be_nil
+    end
+    it "returns false if no cc info" do
+      @subscription.profile.state = 'no_info'
+      @subscription.charge_balance.should be_false
+    end
+    it "returns amount charged if successful" do
+      @subscription.charge_balance.should == Money.new(1500)
     end
     
     it "charges against balance" do
@@ -394,13 +367,16 @@ describe Subscription do
     describe "transaction fails" do
       before :each do
         SubscriptionTransaction.should_receive(:charge).and_return( SubscriptionTransaction.new(:success => false ))
-        @subscription.profile.state = 'authorized'
-        @subscription.charge_balance
+      end
+      it "returns false on error" do
+        @subscription.charge_balance.should be_false
       end
       it "sets profile state to :error" do
+        @subscription.charge_balance
         @subscription.profile.should be_error
       end
       it "does not change balance" do
+        @subscription.charge_balance
         @subscription.balance_cents.should == 1500
       end
     end
@@ -411,26 +387,36 @@ describe Subscription do
     before :each do
       @user = create_subscriber
       @subscription = @user.subscription
+      @subscription.profile.state = 'authorized'
+      @subscription.profile.profile_key = '1'
       @subscription.update_attribute :balance_cents, -1500
-      SubscriptionTransaction.stub!(:credit).and_return( SubscriptionTransaction.new(:success => true ))
+      SubscriptionTransaction.stub!(:credit).and_return( SubscriptionTransaction.new(:success => true, :amount => Money.new(1500) ))
     end
     
+    it "returns nil if zero balance" do
+      @subscription.update_attribute :balance_cents, 0
+      @subscription.credit_balance.should be_nil
+    end
+    it "return false if no cc on file" do
+      @subscription.profile.state = 'no_info'
+      @subscription.credit_balance.should be_false
+    end
+    it "returns amount credited if successful" do
+      @subscription.credit_balance.should == Money.new(1500)
+    end
     it "credits balance" do
       @subscription.credit_balance
       @subscription.balance_cents.should == 0
-    end
-    
+    end    
     it "credits credit card" do
       SubscriptionTransaction.should_receive(:credit).with(1500, anything, :subscription => @subscription).and_return( SubscriptionTransaction.new(:success => true ))
       @subscription.credit_balance
-    end
-    
+    end   
     it "saves the transaction" do
       SubscriptionTransaction.should_receive(:credit).and_return( SubscriptionTransaction.new(:success => true ))
       @subscription.credit_balance
       @subscription.transactions.count.should == 1
-    end
-    
+    end    
     it "sets profile state to :authorized" do
       @subscription.profile.state = 'error'
       @subscription.credit_balance
@@ -440,13 +426,16 @@ describe Subscription do
     describe "transaction fails" do
       before :each do
         SubscriptionTransaction.should_receive(:credit).and_return( SubscriptionTransaction.new(:success => false ))
-        @subscription.profile.state = 'authorized'
-        @subscription.credit_balance
+      end
+      it "returns false on error" do
+        @subscription.credit_balance.should be_false
       end
       it "sets profile state to :error" do
+        @subscription.credit_balance
         @subscription.profile.should be_error
       end
       it "does not change balance" do
+        @subscription.credit_balance
         @subscription.balance_cents.should == -1500
       end
     end

@@ -1,1 +1,16 @@
-./script/generate saas_scaffold
+Description:
+    This generator adds a subscription controller and views to your application
+
+Example:
+    ./script/generate saas_scaffold
+
+This will create:
+    app/controllers/subscriptions_controller.rb
+    app/views/subscriptions/credit_card.html.erb
+    app/views/subscriptions/edit.html.erb
+    app/views/subscriptions/history.html.erb
+    app/views/subscriptions/show.html.erb
+
+and add to config/routes.rb
+    map.resources :subscriptions, {:member=>{:cancel=>:get, :store_credit_card=>:post, :credit_card=>:get, :history=>:get}}
+    
