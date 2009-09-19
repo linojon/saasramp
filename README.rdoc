@@ -66,6 +66,7 @@ Requires the following gems
 - ActiveMerchant - for gateways and credit card validation
 - Money - for currency numerics
 - state_machine - a better state machine
+- lockfile - for rake tasks
 
 Testing requires gems
 - rspec, rspec-on-rails
@@ -86,6 +87,7 @@ Easy configuration and customization
 	config.gem 'activemerchant', :lib => 'active_merchant'
 	config.gem "money"
 	config.gem 'state_machine'
+	config.gem 'lockfile'
 
 === Generate initialize
 	$ ./script/generate saasramp

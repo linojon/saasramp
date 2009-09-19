@@ -5,8 +5,8 @@ class SaasFeaturesGenerator < Rails::Generator::Base
       m.directory   'features'
       m.file        'subscription.feature',       'features/subscription.feature'
       
-      m.directory   'features/steps'
-      m.file        'subscription_steps.rb',      'features/steps/subscription_steps.rb'
+      m.directory   'features/step_definitions'
+      m.file        'subscription_steps.rb',      'features/step_definitions/subscription_steps.rb'
       
       m.directory   'features/support'
       m.file        'subscription_helpers.rb',    'features/support/subscription_helpers.rb'

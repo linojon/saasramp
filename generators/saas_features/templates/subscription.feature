@@ -8,7 +8,7 @@ Feature: Subscription
 		When I go to my subscription page
 		Then I should see "Free"
 		And I should see "(no credit card on file)"
-    And show me the page
+    #And show me the page
   
 	Scenario: I have a free account and sign up for a paid plan
 		Given a "free" subscriber is logged in
@@ -16,7 +16,7 @@ Feature: Subscription
 		#And show me the page
 		And I select "basic" from "Plan"
 		And I press "Change Plan"
-		And show me the page		
+		#And show me the page		
 		Then I should be on my subscription page
 		And I should see "Basic ($10.00 per month)"
 		And I should see "Trial"
