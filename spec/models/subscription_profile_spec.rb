@@ -107,7 +107,8 @@ describe SubscriptionProfile do
       card.verification_value.should be_blank
     end
     
-    it "uses update instead of store if have a profile_key"
+    # TODO
+    #it "uses update instead of store if have a profile_key"
   end
 
 end

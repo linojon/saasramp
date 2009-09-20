@@ -43,7 +43,8 @@ describe AuthorizeNetCimGateway do
       @gateway.unstore( @key ) if @key
     end
 
-    it "update customer profile using customer key"
+    # TODO
+    #it "update customer profile using customer key"
   
     it "authorize a charge on credit card (for validation)" do
       response = @gateway.authorize( @amount, @key )

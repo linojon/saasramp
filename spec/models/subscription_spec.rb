@@ -316,6 +316,7 @@ describe Subscription do
       end
     end
     
+    # TODO
     #describe "when expired"
   end
 

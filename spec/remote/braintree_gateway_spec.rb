@@ -49,7 +49,8 @@ describe BraintreeGateway do
       @key = response.token
     end
 
-    it "update customer profile"
+    # TODO
+    #it "update customer profile"
   
     it "purchase" do
       response = @gateway.purchase( @amount, @key )

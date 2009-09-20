@@ -56,8 +56,6 @@ describe SubscriptionTransaction do
       result.action.should == 'validate'
       result.message.should == BogusGateway::ERROR_MESSAGE
     end
-    
-    it "logs result"
   end
   
   # -------------------------
@@ -91,15 +89,14 @@ describe SubscriptionTransaction do
       result.reference.should be_nil
       result.message.should == BogusGateway::ERROR_MESSAGE
     end   
-    
-    it "logs result"
   end
   
   # -------------------------
-  describe "update card" do
-    it "updates card"
-    it "unstores then stores if gateway doesnt support update"
-  end
+  # TODO
+  # describe "update card" do
+  #   it "updates card"
+  #   it "unstores then stores if gateway doesnt support update"
+  # end
   
   # -------------------------
   describe "unstore card" do    
@@ -129,8 +126,6 @@ describe SubscriptionTransaction do
       result.reference.should be_nil
       result.message.should == BogusGateway::UNSTORE_ERROR_MESSAGE
     end
-    
-    it "logs result"
   end
   
   # -------------------------
@@ -175,8 +170,6 @@ describe SubscriptionTransaction do
       result.amount_cents.should == @amount
       result.message.should == BogusGateway::ERROR_MESSAGE
     end
-    
-    it "logs result"
   end
   
   # -------------------------
@@ -222,13 +215,11 @@ describe SubscriptionTransaction do
       result.message.should == BogusGateway::ERROR_MESSAGE
     end
     
-    it "logs result"
-    
-    describe "as refund" do
-      it "uses refund when gateway doesnt support credit"
-      it "finds a recent charge"
-      it "refunds against that charge"
-    end
+    # TODO
+    # describe "as refund" do
+    #   it "uses refund when gateway doesnt support credit"
+    #   it "finds a recent charge"
+    #   it "refunds against that charge"
+    # end
   end
-  
 end
