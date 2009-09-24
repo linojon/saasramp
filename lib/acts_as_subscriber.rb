@@ -8,7 +8,12 @@ module Saasramp           #:nodoc:
       
       module ClassMethods
         def acts_as_subscriber(options = {})
-          has_one :subscription, :as => :subscriber, :dependent => :destroy
+          # when subscriber is using acts_as_paranoid, we'll destroy subscription (and its children) only when really really destroyed
+          if self.respond_to?(:paranoid?) && self.paranoid?
+            has_one :subscription, :as => :subscriber
+          else
+            has_one :subscription, :as => :subscriber, :dependent => :destroy
+          end
           validates_associated :subscription
           
           include Saasramp::Acts::Subscriber::InstanceMethods
@@ -50,6 +55,13 @@ module Saasramp           #:nodoc:
           # exceeded[:file_count]  = plan.max_files  if subscriber.file_count > plan.max_files
           # exceeded
 		    end
+
+		    # when acts_as_paranoid, only destroy dependents when i'm really getting destroyed
+		    # (this way we don't have to also make the dependents acts_as_paranoid)
+		    def destroy!
+		      self.subscription.destroy if self.class.respond_to?(:paranoid?) && self.class.paranoid? && self.subscription
+		      super
+	      end
   		  
         protected
         

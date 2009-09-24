@@ -144,6 +144,7 @@ class SubscriptionProfile < ActiveRecord::Base
   end
   
   def unstore_card
+    return if no_info? || profile_key.nil?
     transaction do # atomic
       tx  = SubscriptionTransaction.unstore( profile_key )
       subscription.transactions.push( tx )

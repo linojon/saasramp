@@ -245,6 +245,7 @@ jonathan at linowes dat com
 
 * Uses the Money class for money but haven't implemented currency or exchange rates
 * I built this for a "freemium" business model (http://en.wikipedia.org/wiki/Freemium) (sign up free, pay for more features). It should work for "subscribe or nothing" but I havent worked through those scenarios. I figure you'll always want people to be able to log in and adjust their account even if they're not a paying subscriber at the moment.
+* Works with acts_as_paranoid. Declare your subscriber model a_a_paranoid before a_a_subscriber. I've had problems with the aap gem, the plugin works (and use the edendevelopment fork, see http://www.vaporbase.com/postings/stack_level_too_deep). The subscription and its children are NOT paranoid, and they stick around until the subscriber is really really destroy! (bang).
 
 
 Copyright (c) 2009 Jonathan Linowes, released under the MIT license
