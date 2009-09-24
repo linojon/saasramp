@@ -8,7 +8,7 @@ module Saasramp           #:nodoc:
       
       module ClassMethods
         def acts_as_subscriber(options = {})
-          has_one :subscription, :dependent => :destroy, :as => :subscriber
+          has_one :subscription, :as => :subscriber, :dependent => :destroy
           validates_associated :subscription
           
           include Saasramp::Acts::Subscriber::InstanceMethods
@@ -27,8 +27,12 @@ module Saasramp           #:nodoc:
   		  def subscription_plan=(plan)
   		    # ensure subscription exists when plan set from new or create
   		    self.build_subscription if subscription.nil?
- 		      # arg can be object or id
- 		      subscription.plan = plan.is_a?(SubscriptionPlan) ? plan : SubscriptionPlan.find_by_id(plan)
+ 		      # arg can be object or id or name
+ 		      subscription.plan = case
+ 		        when plan.is_a?(SubscriptionPlan):  plan 
+ 		        when plan.to_i > 0:                 SubscriptionPlan.find_by_id(plan)
+ 		        else                                SubscriptionPlan.find_by_name(plan)
+ 		        end
   			end
   			
   			def subscription_plan

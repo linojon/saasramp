@@ -4,27 +4,39 @@
 
 describe "acts as subscriber", :shared => true do
   before :each do
-    @user = subject # (?!)
+    @subscriber = subject # (?!)
   end
   
   it "has one subscription" do
-    @user.should respond_to(:subscription)
+    @subscriber.should respond_to(:subscription)
   end
   
   it "has default plan when no subscription" do
-    @user.save
-    @user.subscription_plan.should == SubscriptionPlan.default_plan
+    @subscriber.save
+    @subscriber.subscription_plan.should == SubscriptionPlan.default_plan
   end
   
   it "sets subscription plan" do
     plan = SubscriptionPlan.new( :name => 'basic' )
-    @user.subscription_plan = plan
-    @user.subscription.plan.should == plan
+    @subscriber.subscription_plan = plan
+    @subscriber.subscription.plan.should == plan
+  end
+  
+  it "sets subscription plan by id" do
+    plan = SubscriptionPlan.create( :name => 'basic' )
+    @subscriber.subscription_plan = plan.id
+    @subscriber.subscription.plan.should == plan
+  end
+  
+  it "sets subscription plan by name" do
+    plan = SubscriptionPlan.create( :name => 'basic' )
+    @subscriber.subscription_plan = 'basic'
+    @subscriber.subscription.plan.should == plan
   end
   
   it "gets subscription plan" do
     plan = SubscriptionPlan.new( :name => 'basic' )
-    @user.subscription.plan = plan
-    @user.subscription_plan.should == plan    
+    @subscriber.subscription.plan = plan
+    @subscriber.subscription_plan.should == plan    
   end
 end

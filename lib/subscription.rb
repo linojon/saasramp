@@ -94,10 +94,13 @@ class Subscription < ActiveRecord::Base
   # ------------
   # changing the subscription plan
   # usage: e.g in a SubscriptionsController
-  #  @subscription.change_plan(plan) unless @subscription.exceeds_plan?( plan )  
+  # if !@subscription.exceeds_plan?( plan )  &&  @subscription.change_plan( plan )
+  #   @subscription.renew
+  # end
   
-  # the #change_plan method sets the new current plan, prorates unused service from previous billing
-  # billing cycle for the new plan starts today; prorates unused service from previous billing
+  # the #change_plan method sets the new current plan, 
+  # prorates unused service from previous billing
+  # billing cycle for the new plan starts today
   # if was in trial, stays in trial until the trial period runs out
   # note, you should call #renew right after this
   
@@ -236,9 +239,8 @@ class Subscription < ActiveRecord::Base
   end
   
   # ------------
-  # class methods
-  
-  # named scopes, used in daily rake task
+  # named scopes
+  # used in daily rake task
   # note, 'due' scopes find up to and including the specified day
   named_scope :due_now, lambda { 
     { :conditions => ["next_renewal_on <= ?", Time.zone.today] }

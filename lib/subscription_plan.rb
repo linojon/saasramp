@@ -4,6 +4,7 @@ class SubscriptionPlan < ActiveRecord::Base
   composed_of :rate, :class_name => 'Money', :mapping => [ %w(rate_cents cents) ]
 
   validates_presence_of :name
+  validates_uniqueness_of :name
   validates_presence_of :rate_cents  
   validates_numericality_of :interval # in months
   

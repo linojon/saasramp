@@ -70,6 +70,9 @@ Requires the following gems
 
 Testing requires gems
 - rspec, rspec-on-rails
+optional:
+- cucumber
+- no-peeping-toms (plugin)
 
 == Installation
 
@@ -95,12 +98,9 @@ Easy configuration and customization
 === Generate migrations
 	$ ./script/generate saas_migration
 (Review the file, adjust as needed, including custom attributes if any)
+(Note, you can migrate existing subscribers data at the same time)
 	$ rake db:migrate
 	
-=== Acts as subscriber
-To the model that will own the subscription (e.g. User or Account), add
-  acts_as_subscriber
-
 === Define and populate the subscription plans
 - Edit the file db/subscription_plans.yml
 - Load into database
@@ -112,8 +112,16 @@ To the model that will own the subscription (e.g. User or Account), add
 - environment specific settings
 - custom attributes (if any)
 
+=== Acts as subscriber
+To the model that will own the subscription (e.g. User or Account), add
+  acts_as_subscriber
+
+=== Optionally, migrate existing subscribers
+If you already have subscribers in your database (e.g. User or Account records), you need to create a subscription child object (and default plan) for them. This is easy, just re-save the objects. You can do this in console, or in another migration. For example,
+  User.all.each {|a| a.save }
+
 === Optionally, generate scaffolds (controllers and views)
-	$ ./script/generate subscription_scaffold
+	$ ./script/generate saas_scaffold
 
 === Optionally, add email notification observers, in environment.rb
 	config.active_record.observers = :subscription_observer
