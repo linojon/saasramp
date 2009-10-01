@@ -33,11 +33,13 @@ module Saasramp           #:nodoc:
   		    # ensure subscription exists when plan set from new or create
   		    self.build_subscription if subscription.nil?
  		      # arg can be object or id or name
- 		      subscription.plan = case
+ 		      newplan = case
  		        when plan.is_a?(SubscriptionPlan):  plan 
  		        when plan.to_i > 0:                 SubscriptionPlan.find_by_id(plan)
  		        else                                SubscriptionPlan.find_by_name(plan)
- 		        end
+ 		      end
+ 		      # not just change the attribute, really switch plans
+ 		      subscription.change_plan newplan
   			end
   			
   			def subscription_plan

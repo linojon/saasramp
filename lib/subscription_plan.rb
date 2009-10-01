@@ -13,6 +13,7 @@ class SubscriptionPlan < ActiveRecord::Base
   end
   
   def prorated_value( days )
+    days ||= 0 # just in case called with nil
     # this calculation is a little off, we're going to assume 30 days/month rather than varying it month to month
     total_days = interval * 30
     daily_rate = rate_cents.to_f / total_days

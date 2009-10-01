@@ -115,11 +115,6 @@ class Subscription < ActiveRecord::Base
     # or they owe the used (although unpaid) value on current plan [comment out if you want to be more forgiving]
     self.balance -= plan.rate - plan.prorated_value( past_due_days ) if past_due?
     
-    # prorate days since creation if was free (is this what we want?)
-    trial_ends = created_at.to_date + SubscriptionConfig.trial_period.days if plan.nil? || plan.free?
-    # prorate unused trial days if in trial
-    trial_ends = next_renewal_on if trial?
-     
     # update the plan
     self.plan = new_plan
     
@@ -127,9 +122,9 @@ class Subscription < ActiveRecord::Base
     if plan.free?
       self.free
       
-    elsif trial_ends #aka in trial
+    elsif (e = trial_ends_on)
       self.trial
-      self.next_renewal_on = trial_ends
+      self.next_renewal_on = e #reset end date
     
     else #active or past due
       # note, past due grace period resets like active ones due today, ok?
@@ -216,6 +211,22 @@ class Subscription < ActiveRecord::Base
   # true if account is due today or before
   def due?( days_from_now = 0)
     days_remaining && (days_remaining <= days_from_now)
+  end
+  
+  # date trial ends, or nil if not eligable
+  def trial_ends_on
+    # no trials?
+    return if SubscriptionConfig.trial_period.to_i==0
+    case 
+      # in trial, days remaining
+      when trial?     :    next_renewal_on 
+      # start the trial?
+      when plan.nil?  :    Time.zone.today + SubscriptionConfig.trial_period.days
+      # never had a trial? prorate since creation
+      when plan.free? :    d = created_at.to_date + SubscriptionConfig.trial_period.days
+                           d unless d <= Time.zone.today
+      # else nil not eligable
+    end
   end
   
   # number of days until next renewal
