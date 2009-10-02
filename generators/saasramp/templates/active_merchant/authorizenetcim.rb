@@ -9,7 +9,8 @@ require 'digest/sha1'
 
 class AuthorizeNetCimResponse < ActiveMerchant::Billing::Response
   def token
-    @authorization || @params['direct_response']['transaction_id'] 
+    @authorization || 
+    (@params['direct_response']['transaction_id'] if @params && @params['direct_response'])
   end
 end
 
