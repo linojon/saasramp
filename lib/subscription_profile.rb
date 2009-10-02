@@ -11,6 +11,8 @@ class SubscriptionProfile < ActiveRecord::Base
   
   # ------------
   state_machine :state, :initial => :no_info do
+    before_transition any => :no_info,   :do => :unstore_card
+
     event :authorized do 
       transition any => :authorized
     end
@@ -49,30 +51,40 @@ class SubscriptionProfile < ActiveRecord::Base
   # -------------
   # move this into a test helper...
   def self.example_credit_card_params( params = {})
-    case SubscriptionConfig.gateway_name
-      when 'braintree'
+    default = { 
+      :first_name         => 'First Name', 
+      :last_name          => 'Last Name', 
+      :type               => 'visa',
+      :number             => '4111111111111111', 
+      :month              => '10', 
+      :year               => '2012', 
+      :verification_value => '999' 
+    }.merge( params )
+    
+    specific = case SubscriptionConfig.gateway_name
+      when 'authorize_net_cim'
         { 
-          :first_name         => 'First Name', 
-          :last_name          => 'Last Name', 
           :type               => 'visa',
-          :number             => '4111111111111111', 
-          :month              => '10', 
-          :year               => '2012', 
-          :verification_value => '999' 
-        }.merge( params )
-
+          :number             => '4007000000027', 
+        }
+        # 370000000000002 American Express Test Card
+        # 6011000000000012 Discover Test Card
+        # 4007000000027 Visa Test Card
+        # 4012888818888 second Visa Test Card
+        # 3088000000000017 JCB 
+        # 38000000000006 Diners Club/ Carte Blanche
+        
       when 'bogus'
         { 
-          :first_name         => 'First Name', 
-          :last_name          => 'Last Name', 
           :type               => 'bogus',
           :number             => '1', 
-          :month              => '10', 
-          :year               => '2012', 
-          :verification_value => '999' 
-        }.merge( params )
+        }   
         
+      else
+        {}     
       end
+      
+    default.merge(specific).merge(params)
   end
   
   # -------------

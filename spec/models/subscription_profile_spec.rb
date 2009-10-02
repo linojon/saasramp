@@ -39,6 +39,8 @@ describe SubscriptionProfile do
       @profile.remove
       @profile.should be_no_info   
     end
+    
+    # TODO: remove calls unstore_card
   end
   
   describe "credit card" do
