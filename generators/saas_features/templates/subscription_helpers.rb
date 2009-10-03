@@ -12,7 +12,7 @@ module SubscriptionHelpers
   end
 
   def set_renewal( subscriber, text )
-    subscriber.subscription.next_renewal_on = renewal_text_to_date(text)
+    subscriber.subscription.next_renewal_on = text_to_date(text)
     subscriber.subscription.save
   end
 
@@ -22,41 +22,32 @@ module SubscriptionHelpers
     when /no info/
       profile.state = 'no_info'
     when /authorized/, /error/
-       # fake it for now, not really on gateway
       params = SubscriptionProfile.example_credit_card_params
-      profile.profile_key         = '1' # bogus: 1=success, 2=exception, 3=error on subsequent transactions
-      profile.card_first_name     = params[:first_name]
-      profile.card_last_name      = params[:last_name]
-      profile.card_type           = params[:type]
-      profile.card_display_number = 'XXXX-XXXX-XXXX-1'
-      profile.card_expires_on     = '2012-10-31'
+      profile.credit_card = params
+  	  #profile.request_ip = request.remote_ip
+  	  ok = profile.save
+  	  ok.should be_true
       if text =~ /error/
         profile.state = 'error'
-      else
-        profile.state = 'authorized'
+        profile.save
       end
-      profile.save
     else
       puts 'bad case in set_current_profile_state'
     end
     profile.save
   end
 
-  def renewal_text_to_date(text)
+  def text_to_date(text)
     today = Time.zone.today
     case text
     when /original renewal plus 1 month/
       @original_renewal + 1.month
     when /today/
       today
-    when /in 3 days/
-      today + 3.days
-    when /3 days ago/
-      today - 3.days
-    when /in 15 days/
-      today + 15.days
-    when /in 30 days/
-      today + 30.days
+    when /in (\d+) days/
+      today + ($1).to_i.days
+    when /(\d+) days ago/
+      today - ($1).to_i.days
     when /in 1 month/
       today + 1.month
     when /in 1 year/
@@ -64,7 +55,7 @@ module SubscriptionHelpers
     when "blank"
       nil
     else
-      puts 'bad case in renewal_text_to_date'
+      puts 'bad case in text_to_date'
     end
   end
 end

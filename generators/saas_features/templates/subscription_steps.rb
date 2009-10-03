@@ -1,5 +1,5 @@
 Given /^a "(.*)" subscriber$/ do |plan|
-  reate_subscriber( :username => 'subscriber', :subscription_plan => plan )
+  create_subscriber( :username => 'subscriber', :subscription_plan => plan )
 end
 
 Given /^a "(.*)" subscriber is logged in$/ do |plan|

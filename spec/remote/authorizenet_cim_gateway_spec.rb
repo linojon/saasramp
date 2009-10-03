@@ -6,8 +6,8 @@ describe AuthorizeNetCimGateway do
     ActiveMerchant::Billing::Base.mode = :test
     
     gateway_params = {
-      :login    => '5Lh6pXSLh2sU',      # API login
-      :password => '2c33558GR3mcNeTj',   # API transaction key
+      :login    => 'put yours here',      # API login
+      :password => 'put yours here',   # API transaction key
       :test => true 
     }
     @gateway = ActiveMerchant::Billing::Base.gateway('authorize_net_cim').new( gateway_params )
