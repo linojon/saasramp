@@ -13,7 +13,7 @@ Built as a wrapper to ActiveMerchant
 
 Recurring billing and other daily tasks and notifications run on your server
 - Does not use recurring billing at the gateway (for more control and to avoid synchronization problems)
-- Run "rake saas:billing" (e.g. as a daily cron job)
+- Run "rake saas:daily" (e.g. as a daily cron job)
 - Billing task can be run any time, skip a day, or multiple times a day without fear of sending duplicate billings or messages
 
 Decouples subscriptions from authentication and authorization 
@@ -26,7 +26,8 @@ Subscription model
 - When a model "acts_as_subscriber" it has one subscription
 - Subscription states - :free, :trial, :active, :past_due, :expired
 - #renew method processes recurring billing
-- #change_plan method for changing plans and billing or crediting the difference
+- #change_plan method for changing plans
+- #charge_balance to bill credit card current account balance
 
 Subscription plan model
 - Define plans with different name, rate, interval
