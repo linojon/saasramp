@@ -225,14 +225,16 @@ describe Subscription do
     end
     
     it "finds allowed plans" do
-      @plan = SubscriptionPlan.create( :name => 'basic', :rate_cents => 1000 )      
-      @plan2 = SubscriptionPlan.create( :name => 'limited', :rate_cents => 1000 )      
-      @subscriber = create_subscriber( :subscription_plan => @plan )
+      @free         = SubscriptionPlan.create( :name => 'free', :rate_cents => 0, :interval => 1)      
+      @plan         = SubscriptionPlan.create( :name => 'basic', :rate_cents => 1000 )      
+      @plan2        = SubscriptionPlan.create( :name => 'limited', :rate_cents => 1000 )      
+      @subscriber   = create_subscriber( :subscription_plan => @plan )
       @subscription = @subscriber.subscription
+      @subscription.subscriber.should_receive(:subscription_plan_check).with(@free).and_return(nil)
       @subscription.subscriber.should_receive(:subscription_plan_check).with(@plan).and_return("exceeded limits")
       @subscription.subscriber.should_receive(:subscription_plan_check).with(@plan2).and_return(nil)
   
-      @subscription.allowed_plans.should == [@plan2]
+      @subscription.allowed_plans.should == [@free, @plan2]
     end
   end
   

@@ -30,20 +30,18 @@ module Saasramp           #:nodoc:
         attr_accessor :subscription_plan
         
   		  def subscription_plan=(plan)
-  		    # ensure subscription exists when plan set from new or create
-  		    self.build_subscription if subscription.nil?
  		      # arg can be object or id or name
- 		      newplan = case
+ 		      @newplan = case
  		        when plan.is_a?(SubscriptionPlan):  plan 
  		        when plan.to_i > 0:                 SubscriptionPlan.find_by_id(plan)
  		        else                                SubscriptionPlan.find_by_name(plan)
  		      end
  		      # not just change the attribute, really switch plans
- 		      subscription.change_plan newplan
+ 		      subscription.change_plan @newplan unless subscription.nil?
   			end
   			
   			def subscription_plan
-  			  subscription.plan 
+  			  subscription.plan if subscription
   		  end
   		  
   		  # overwrite this method
@@ -67,9 +65,13 @@ module Saasramp           #:nodoc:
   		  
         protected
         
-        # ensure there's always a subscription defined
-        def after_initialize
-          self.build_subscription if subscription.nil?
+        def after_create
+          # this is the best time to create the subscription
+          # because cannot build_subscription while self.id is still nil
+          if subscription.nil?
+            self.create_subscription
+            self.subscription.change_plan @newplan if @newplan
+          end
         end
       end
       

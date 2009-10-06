@@ -5,7 +5,7 @@ class SubscriptionConfig
     if File.exists?(config_file)
       text = ERB.new(File.read(config_file)).result
       hash = YAML.load(text)
-      config = hash.stringify_keys[ ENV['RAILS_ENV'] ] #[Rails.env] doesnt catch 'cucumber' ?!
+      config = hash.stringify_keys[ ENV['RAILS_ENV'] || Rails.env]
       config.keys.each do |key|
         cattr_accessor key
         send("#{key}=", config[key])

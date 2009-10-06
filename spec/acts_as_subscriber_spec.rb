@@ -4,7 +4,7 @@
 #  require File.dirname(__FILE__) + '/../vendor/plugins/saasramp/spec/acts_as_subscriber_spec'
 #  describe User, "subscriber"
 #    before :each do
-#      @subscriber = User.new(:username => 'me', :password => 'secret', :password_confirmation => 'secret')
+#      @subscriber = User.create(:username => 'me', :password => 'secret', :password_confirmation => 'secret')
 #    end
 #    it_should_behave_like "a subscriber"
 #  end
@@ -12,6 +12,7 @@
 describe "a subscriber", :shared => true do
   before :each do
     @subscriber ||= subject
+    @subscriber.save.should be_true # just incase you did #new not #create :)
   end
   
   it "has one subscription" do
@@ -19,7 +20,6 @@ describe "a subscriber", :shared => true do
   end
   
   it "has default plan when no subscription" do
-    @subscriber.save
     @subscriber.subscription_plan.should == SubscriptionPlan.default_plan
   end
   
@@ -50,7 +50,6 @@ describe "a subscriber", :shared => true do
   if described_class.paranoid?
     describe "when paranoid" do
       it "does not actually destroy subscription" do
-        @subscriber.save.should be_true
         @subscriber.destroy
         described_class.find_by_id( @subscriber.id ).should be_nil
         described_class.find_by_id( @subscriber.id, :with_deleted => true ).should_not be_nil
@@ -58,7 +57,6 @@ describe "a subscriber", :shared => true do
       end
     
       it "destroys subscription on destroy! (bang)" do
-        @subscriber.save.should be_true
         @subscriber.destroy!
         described_class.find_by_id( @subscriber.id ).should be_nil
         described_class.find_by_id( @subscriber.id, :with_deleted => true ).should be_nil
@@ -67,7 +65,6 @@ describe "a subscriber", :shared => true do
     end
   else
     it "destroys subscription" do
-      @subscriber.save.should be_true
       @subscriber.destroy
       Subscription.find_by_id( @subscriber.subscription.id ).should be_nil
     end  
