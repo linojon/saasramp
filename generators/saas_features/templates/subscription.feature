@@ -20,7 +20,7 @@ Feature: Subscription
 		Then I should be on my subscription page
 		And I should see "Basic ($10.00 per month)"
 		And I should see "Trial"
-		And the subscription should have next renewal in 1 month
+		And the subscription should have next renewal in 30 days
 		
   Scenario: I add credit card info
 		Given a "basic" subscriber who is in trial, with next renewal in 3 days, and profile has no info

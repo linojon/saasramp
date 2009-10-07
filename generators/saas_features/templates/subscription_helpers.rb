@@ -8,6 +8,8 @@ module SubscriptionHelpers
     subscriber.subscription.state = text.gsub(' ','_')
     # past due will have a balance due, so set it to the plan rate
     subscriber.subscription.balance = subscriber.subscription.plan.rate if subscriber.subscription.past_due?
+    # assume active and past due were created more than 30 days ago
+    subscriber.subscription.created_at = Time.zone.now - 60.days
     subscriber.subscription.save
   end
 
