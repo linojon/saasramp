@@ -147,7 +147,7 @@ describe Subscription do
   # -------------------------
   describe "days_remaining" do
     before :each do
-      @subscription = create_subscription( :plan => @plan )
+      @subscription = create_subscription
     end
     
     it "and_return nil when next renewal is nil" do
@@ -168,6 +168,33 @@ describe Subscription do
     it "and_return -2 when next renewal is 2 days ago" do
       @subscription.next_renewal_on = Time.zone.today - 2.days
       @subscription.days_remaining.should == -2
+    end
+  end
+
+  # -------------------------
+  describe "trial_ends_on" do
+    before :each do
+      @subscription = create_subscription
+    end
+    
+    it "is nil if no trial period in config" do
+      SubscriptionConfig.stub!(:trial_period).and_return(0)
+      @subscription.trial_ends_on.should be_nil
+    end
+    it "is current next renewal if presently in trial" do
+      @subscription.state = "trial"
+      @subscription.next_renewal_on = Time.zone.today + 3.days
+      @subscription.trial_ends_on.should == Time.zone.today + 3.days
+    end
+    it "is from today if no plan defined yet (eg inquiring what it would be for a gui)" do
+      @subscription.plan = nil
+      @subscription.trial_ends_on.should == Time.zone.today + 30.days
+    end
+    it "is calculated from subscription creation date" do
+      @plan = SubscriptionPlan.create( :name => 'basic', :rate_cents => 1000)
+      @subscription.plan = @plan
+      @subscription.created_at = Time.zone.now - 10.days
+      @subscription.trial_ends_on.should == Time.zone.today + 20.days
     end
   end
 
@@ -211,7 +238,7 @@ describe Subscription do
       @subscription = @subscriber.subscription
       @subscription.subscriber.should_receive(:subscription_plan_check).with(@plan).and_return("exceeded limits")
   
-      @subscription.exceeds_plan.should == "exceeded limits"
+      @subscription.plan_check.should == "exceeded limits"
     end
     
     it "checks if exceeds another plan" do
@@ -221,7 +248,7 @@ describe Subscription do
       @subscription = @subscriber.subscription
       @subscription.subscriber.should_receive(:subscription_plan_check).with(@plan2).and_return("exceeded limits")
   
-      @subscription.exceeds_plan(@plan2).should == "exceeded limits"
+      @subscription.plan_check(@plan2).should == "exceeded limits"
     end
     
     it "finds allowed plans" do
@@ -244,12 +271,12 @@ describe Subscription do
       @plan     = SubscriptionPlan.create( :name => 'basic', :rate_cents => 1000, :interval => 1)      
       @new_plan = SubscriptionPlan.create( :name => 'pro', :rate_cents => 2000, :interval => 1)      
       @today = Time.zone.today
-      SubscriptionTransaction.stub!(:charge).and_return(SubscriptionTransaction.new(:success => true))
     end
     
     describe "when active" do
       before :each do
         @subscription = create_subscription( :plan => @plan )
+        @subscription.created_at = @today - 1.year #dont calc we're in trial
         @subscription.next_renewal_on = @today + 6.days # remaining value = 1000/(30/6) = 200
         @subscription.state = 'active'
       end
@@ -295,6 +322,7 @@ describe Subscription do
     describe "when past due" do
       before :each do
         @subscription = create_subscription( :plan => @plan )
+        @subscription.created_at = @today - 1.year 
         @subscription.next_renewal_on = @today - 6.days
         @subscription.state = 'past_due'
         @subscription.balance = @plan.rate # 1000, remaining value = 800

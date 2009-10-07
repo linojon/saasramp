@@ -47,7 +47,7 @@ describe "a subscriber", :shared => true do
     @subscriber.subscription_plan.should == plan    
   end
   
-  if described_class.paranoid?
+  if described_class.respond_to?(:paranoid?) && described_class.paranoid?
     describe "when paranoid" do
       it "does not actually destroy subscription" do
         @subscriber.destroy

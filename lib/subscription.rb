@@ -146,11 +146,11 @@ class Subscription < ActiveRecord::Base
   
   # test if subscriber can use a plan, returns true or false
   def exceeds_plan?( plan = self.plan)
-    !exceeds_plan(plan).blank?
+    !(plan_check(plan).blank?)
   end
   
   # check if subscriber can use a plan and returns list of attributes exceeded, or blank for ok
-  def exceeds_plan( plan = self.plan)
+  def plan_check( plan = self.plan)
     subscriber.subscription_plan_check(plan)       
   end  
   
@@ -220,10 +220,12 @@ class Subscription < ActiveRecord::Base
     case 
       # in trial, days remaining
       when trial?     :    next_renewal_on 
-      # start the trial?
+      # new record? would start from today
       when plan.nil?  :    Time.zone.today + SubscriptionConfig.trial_period.days
-      # never had a trial? prorate since creation
-      when plan.free? :    d = created_at.to_date + SubscriptionConfig.trial_period.days
+      # start or continue a trial? prorate since creation
+      #when active?    :
+    else
+          d = created_at.to_date + SubscriptionConfig.trial_period.days
                            d unless d <= Time.zone.today
       # else nil not eligable
     end

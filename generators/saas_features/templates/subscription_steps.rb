@@ -54,7 +54,7 @@ end
   
 Then /^the subscription should have next renewal (.*)$/ do |value|
   subscriber = find_subscriber
-  subscriber.subscription.next_renewal_on.should == renewal_text_to_date(value)
+  subscriber.subscription.next_renewal_on.should == text_to_date(value)
 end
 
 Then /^the profile should be "(no info|authorized|error)"$/ do |state|
@@ -69,6 +69,6 @@ end
 
 Then /^the next renewal should be set to "(.*)"$/ do |text|
   subscriber = find_subscriber
-  subscriber.subscription.next_renewal_on.should == renewal_text_to_date(text)
+  subscriber.subscription.next_renewal_on.should == text_to_date(text)
 end
 
