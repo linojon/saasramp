@@ -35,7 +35,8 @@ class Subscription < ActiveRecord::Base
       transition any => :active
     end
     event :past_due do
-      transition (any - [:expired]) => :past_due, :if => Proc.new {|s| s.due? }
+      from = any - [:expired]
+      transition from => :past_due, :if => Proc.new {|s| s.due? }
     end
     event :expired do
       transition any => :expired

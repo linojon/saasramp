@@ -20,7 +20,8 @@ class SubscriptionProfile < ActiveRecord::Base
       transition any => :error
     end
     event :remove do
-      transition (any - [:no_info]) => :no_info
+      from = any - [:no_info]
+      transition from => :no_info
     end
   end
   

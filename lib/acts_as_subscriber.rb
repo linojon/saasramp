@@ -65,7 +65,7 @@ module Saasramp           #:nodoc:
   		  
         protected
         
-        def after_create
+        def after_save
           # this is the best time to create the subscription
           # because cannot build_subscription while self.id is still nil
           if subscription.nil?

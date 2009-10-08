@@ -25,8 +25,8 @@
   </p>
   <p>
     <%= f.label :month, 'Card expires on:' %><br />
-		month: <%= f.select :month,  1.upto(12).to_a.map  { |i| "%02d" % i } %>
-		year: <%= f.select :year, Date.today.year.upto(Date.today.year+10).to_a %>
+		month: <%= f.select :month,  (1..12).map  { |i| "%02d" % i } %>
+		year: <%= f.select :year, (Date.today.year..(Date.today.year+10)) %>
   </p>
 	<% end %>
   <p><%= form.submit "Submit", :disable_with => "One moment please..." %></p>

@@ -33,6 +33,10 @@ class ActiveMerchant::Billing::AuthorizeNetCimGateway
     }
   end
 
+  # NOTE TO SELF: this gateway has a validate_customer_payment_profile action 
+  # It requires the profile id (and billing id) exists, so its for validating an existing profile
+  # Thus, cannot be used to validate a card -before- storing it (as saasramp expects in SubscriptionTransaction#validate_card)
+
   # Create a payment profile
   def store(creditcard, options = {})
     profile = {
